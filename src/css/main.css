@@ -1,4 +1,4 @@
-.wrapper {
+/* .wrapper {
 	background-color: #fff9e6;
 	padding: 20px;
 	border-radius: 10px;
@@ -6,4 +6,13 @@
 
 h1 {
 	color: #8873be;
+} */
+
+.dot {
+	text-align: center;
+	height: 50px;
+	width: 50px;
+	border-radius: 50%;
+	background: white;
+	border: 1px solid black;
 }
