@@ -4,10 +4,12 @@ import SvgOr from './../../img/or.svg';
 
 export default function OrNode({data, isConnectable}) {
     return (
-        <div style={{height: "100px", width: "100px"}}>
-            <p>{data.label}</p>
-            <Handle type="target" position={Position.Bottom} isConnectable={isConnectable} />
-            <img src={SvgOr}/>
+        <div className='gate or'>
+            {/* <p>{data.label}</p> */}
+            <Handle type="target" position={Position.Bottom} style={{left: 20, right: 'auto'}} id='a' isConnectable={isConnectable} />
+            <Handle type="target" position={Position.Bottom} style={{right: 12, left: 'auto'}} id='b' isConnectable={isConnectable} />
+            <Handle type="source" position={Position.Top} id='c' isConnectable={isConnectable} />
+            <img className='gate-img' style={{transformOrigin: 'center', transform: 'rotate(-90deg)'}} src={SvgOr}/>
         </div>
       );
 }

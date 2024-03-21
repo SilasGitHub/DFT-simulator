@@ -8,11 +8,64 @@ h1 {
 	color: #8873be;
 } */
 
-.dot {
+.gate {
+	background: white;
+	border: 1px solid black;
 	text-align: center;
+	justify-content: center;
+	display: flex;
+	text-align: center;
+}
+
+.dot {
 	height: 50px;
 	width: 50px;
 	border-radius: 50%;
-	background: white;
+}
+
+.or {
+	height: 100px;
+	width: 60px;
+}
+
+.spare {
+	height:100px;
+	width: 160px;
+	justify-content: space-between;
+	flex-direction: column;
+}
+
+.and {
+	height: 100px;
+	width: 60px;
+}
+
+.gate-img {
+	object-fit: contain;
+}
+
+.arrow-right {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 30px solid black;
+  }
+
+.dndnode {
+	width: 100%;
 	border: 1px solid black;
 }
+
+.node-drag {
+	text-align: center;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.reactflow-wrapper {
+	flex-grow: 1;
+	height: 100%;
+  }
