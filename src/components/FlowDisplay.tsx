@@ -28,7 +28,7 @@ export default function FlowDisplay() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
-  const [updateFail, doUpdateFail] = React.useState(false)
+  const [updateFail, doUpdateFail] = React.useState<number | null>()
 
 React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
 
@@ -68,7 +68,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
       };
 
       if (type == "sourceNode") {
-        newNode.data = {...newNode.data, failed: false}
+        newNode.data = {...newNode.data, failed: null}
         console.log(newNode);
       }
 
@@ -81,7 +81,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
       if (!updateFail) {
         return
       }
-      doUpdateFail(false)
+      doUpdateFail(null)
 
       const start_node = nodes.find((val, idx, arr) => {return val.type === "sysNode"});
       if (start_node == null) {
@@ -105,7 +105,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
 
   const onConnectWrap = (params) => {
     onConnect(params)
-    doUpdateFail(true);
+    doUpdateFail(Date.now());
   }
 
   const onNodeClick = (ev, node) => {
@@ -114,12 +114,12 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
     }
 
     setNodes((nds) => {
-      doUpdateFail(true);
+      doUpdateFail(Date.now());
       return nds.map((nd) => {
         if (nd.id == node.id) {
           nd.data = {
             ...nd.data,
-            failed: !nd.data.failed
+            failed: nd.data.failed ? null : Date.now()
           }
         }
 
