@@ -79,6 +79,23 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
         
             return [lhsActiveXor != rhsActiveXor, resEdgesXor]
         case "pandNode":
+            const lhsEdgePand = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
+            const rhsEdgePand = allConnectedEdges.find((edge) => {return edge.targetHandle == 'b' && edge.target == current_node.id});
+        
+            const lhsNodePand = lhsEdgePand == null ? null : allIncoming.find((node) => {return node.id === lhsEdgePand.source})
+            const rhsNodePand = rhsEdgePand == null ? null : allIncoming.find((node) => {return node.id === rhsEdgePand.source})
+            
+            const [lhsActivePand, lhsEdgesPand] = lhsNodePand == null ? [false, []] : get_edges_to_animate(lhsNodePand, all_nodes, all_edges)
+            const [rhsActivePand, rhsEdgesPand] = rhsNodePand == null ? [false, []] : get_edges_to_animate(rhsNodePand, all_nodes, all_edges)
+            
+            let resEdgesPand = [...lhsEdgesPand, ...rhsEdgesPand]
+        
+            if (lhsActivePand && rhsActivePand && lhsNodePand.data.failed < rhsNodePand.data.failed) {
+                resEdgesPand = [...resEdgesPand, lhsEdgePand, rhsEdgePand]
+            }
+        
+            return [lhsActivePand && rhsActivePand && lhsNodePand.data.failed < rhsNodePand.data.failed, resEdgesPand]
+            
         case "spareNode":
         case "fdep":    
         default:
