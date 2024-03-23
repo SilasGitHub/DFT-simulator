@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactFlow, { Background, Controls, MiniMap, ReactFlowProvider, useNodesState, useEdgesState, addEdge, getConnectedEdges} from 'reactflow'
 import 'reactflow/dist/style.css';import EventNode from './nodes/EventNode';
 import OrNode from './nodes/OrNode';
@@ -8,14 +8,17 @@ import FDEPNode from './nodes/FdepNode';
 import XOrNode from './nodes/XorNode';
 import PAndNode from './nodes/PAndNode';
 import expore_fdep from '../utils/FDEPChecker';
+import SystemNode from './nodes/SystemNode';
+import get_edges_to_animate from '../utils/FDEPChecker';
 ``
 
-const nodeTypes = { sourceNode: EventNode, orNode: OrNode, xorNode: XOrNode, andNode: AndNode, pandNode: PAndNode, spareNode: SpareNode, fdep: FDEPNode};
+const nodeTypes = {sysNode: SystemNode, sourceNode: EventNode, orNode: OrNode, xorNode: XOrNode, andNode: AndNode, pandNode: PAndNode, spareNode: SpareNode, fdep: FDEPNode};
 
 const initialNodes = [      // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'sourceNode' },
 //{ id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
-{ id: '1', data: { label: 'C' }, position: { x: 100, y: 200 }, type: 'fdep' }]
+{ id: '1', data: {}, position: { x: 100, y: 200 }, type: 'sysNode' }]
 
+const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -25,6 +28,7 @@ export default function FlowDisplay() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
+  const [updateFail, doUpdateFail] = React.useState(false)
 
 React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
 
@@ -49,7 +53,6 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
       if (typeof type === 'undefined' || !type) {
         return;
       }
-
       // reactFlowInstance.project was renamed to reactFlowInstance.screenToFlowPosition
       // and you don't need to subtract the reactFlowBounds.left/top anymore
       // details: https://reactflow.dev/whats-new/2023-11-10
@@ -61,14 +64,70 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
         id: getId(),
         type,
         position,
-        data: { label: `${type} node` },
+        data: { label: `${alphabet[id % alphabet.length]}` },
       };
+
+      if (type == "sourceNode") {
+        newNode.data = {...newNode.data, failed: false}
+        console.log(newNode);
+      }
 
       setNodes((nds) => nds.concat(newNode));
     },
     [reactFlowInstance],
   );
 
+    const update = React.useEffect(()=> {
+      if (!updateFail) {
+        return
+      }
+      doUpdateFail(false)
+
+      const start_node = nodes.find((val, idx, arr) => {return val.type === "sysNode"});
+      if (start_node == null) {
+        return;
+      }
+  
+      const [failed, edges_to_animate] = get_edges_to_animate(start_node, nodes, edges);
+      console.log("AAA")
+      console.log(edges_to_animate)
+      setEdges((edgs) => {
+        return edgs.map((ed) => {
+          if (edges_to_animate.includes(ed)) {
+            ed.animated = true
+          } else {
+            ed.animated = false
+          }
+          return ed
+        })
+      })
+    }, [edges, nodes]);
+
+  const onConnectWrap = (params) => {
+    onConnect(params)
+    doUpdateFail(true);
+  }
+
+  const onNodeClick = (ev, node) => {
+    if (node.type !== "sourceNode") {
+      return;
+    }
+
+    setNodes((nds) => {
+      doUpdateFail(true);
+      return nds.map((nd) => {
+        if (nd.id == node.id) {
+          nd.data = {
+            ...nd.data,
+            failed: !nd.data.failed
+          }
+        }
+
+        return nd;
+      });
+    });
+
+  }
 
     return (
       <ReactFlowProvider>
@@ -82,7 +141,8 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
         onInit={setReactFlowInstance}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onConnect={onConnectWrap}
+        onNodeDoubleClick={onNodeClick}
       >
         <Controls />
         <MiniMap />

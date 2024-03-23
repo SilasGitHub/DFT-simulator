@@ -1,11 +1,12 @@
 import React from 'react'
-import { Handle, Position } from 'reactflow';
+import {Position } from 'reactflow';
+import CustomHandle from '../CustomHandle';
 
-export default function EventNode({data, isConnectable}) {
+export default function SystemNode({data, isConnectable}) {
     return (
         <div className='gate dot'>
-            <Handle type="target" position={Position.Bottom} isConnectable={isConnectable} />
-            <p>{data.label}</p>
+            <CustomHandle type="target" position={Position.Bottom} id='a' isConnectable={1} />
+            <p>SYS</p>
         </div>
       );
 }

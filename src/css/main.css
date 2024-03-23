@@ -24,20 +24,23 @@ h1 {
 }
 
 .or {
-	height: 100px;
-	width: 60px;
+	min-height: 100px;
+	min-width: 60px;
+	height: 100%;
 }
 
 .spare {
 	height:100px;
 	width: 160px;
+	/* height: 100%; */
 	justify-content: space-between;
 	flex-direction: column;
 }
 
 .and {
-	height: 100px;
-	width: 60px;
+	min-height: 100px;
+	min-width: 60px;
+	height: 100%;
 }
 
 .gate-img {
@@ -69,3 +72,16 @@ h1 {
 	flex-grow: 1;
 	height: 100%;
   }
+
+.handles {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	width: 10px;
+	height: 100%;
+	position: absolute;
+}
+
+/* .react-flow__handle-bottom {
+	transform: translate(0, 0);
+} */
