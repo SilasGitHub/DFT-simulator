@@ -1,12 +1,12 @@
 /* eslint-disable no-case-declarations */
 // Start with the system node - recursively work up until you reach an event node. 
 // Take into consideration the semantics of the currently expored node (e.g.: if exporing an AND node, only return true if both paths returned true)
-import {getConnectedEdges, getIncomers, Node, Edge} from 'reactflow';
+import {getIncomers, Node, Edge} from 'reactflow';
 
 
 export default function get_edges_to_animate(current_node: Node, all_nodes: Node[], all_edges: Edge[]): [boolean, Edge[]] {
-    const allIncoming: Node[] = getIncomers(current_node, all_nodes, all_edges);
-    const allConnectedEdges: Edge[] = getConnectedEdges([...allIncoming, current_node], all_edges);
+    const allIncoming = getIncomers(current_node, all_nodes, all_edges);
+    const allConnectedEdges = all_edges.filter((ed) => {return ed.target == current_node.id})
 
     switch (current_node.type) {
         case "sysNode":
@@ -14,31 +14,26 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
                 return [false, []];
             }
 
-            const [active, edges] = get_edges_to_animate(allIncoming[0], all_nodes, allConnectedEdges)
+            const [active, edges] = get_edges_to_animate(allIncoming[0], all_nodes, all_edges)
             if (active) {
-                return [active, [...edges, ...getConnectedEdges([current_node], all_edges)]]
+                return [active, [...edges, ...allConnectedEdges]]
             } else {
                 return [active, edges]
             }
         case "sourceNode":
             return [current_node.data.failed, []]
         case "orNode":
-            const lhsEdge = allConnectedEdges.find((edge: Edge) => {return edge.target == current_node.id && edge.targetHandle == 'a'});
-            const rhsEdge = allConnectedEdges.find((edge: Edge) => {return edge.target == current_node.id && edge.targetHandle == 'b'});
-            // console.log(`lhsEdge: ${lhsEdge == null ? 'null' : lhsEdge}, rhsEdge: ${rhsEdge}`)
-            const lhsNode = lhsEdge == null ? null : allIncoming.find((val) => {return val.id === lhsEdge.source})
-            const rhsNode = rhsEdge == null ? null : allIncoming.find((val) => {return val.id === rhsEdge.source})
-            
-            const [lhsActive, lhsEdges] = lhsNode == null ? [false, []] : get_edges_to_animate(lhsNode, all_nodes, allConnectedEdges)
-            const [rhsActive, rhsEdges] = rhsNode == null ? [false, []] : get_edges_to_animate(rhsNode, all_nodes, allConnectedEdges)
-            // console.log(`node: ${current_node.type}`)
-            // console.log(`lhsActive : ${lhsActive}`)
-            // console.log(`lhsEdges : ${lhsEdges}`)
-            // console.log(`rhsActive : ${rhsActive}`)
-            // console.log(`rhsEdges : ${rhsEdges}`)
+            const lhsEdge = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
+            const rhsEdge = allConnectedEdges.find((edge) => {return edge.targetHandle == 'b' && edge.target == current_node.id});
 
+            const lhsNode = lhsEdge == null ? null : allIncoming.find((node) => {return node.id === lhsEdge.source})
+            const rhsNode = rhsEdge == null ? null : allIncoming.find((node) => {return node.id === rhsEdge.source})
+            
+            const [lhsActive, lhsEdges] = lhsNode == null ? [false, []] : get_edges_to_animate(lhsNode, all_nodes, all_edges)
+            const [rhsActive, rhsEdges] = rhsNode == null ? [false, []] : get_edges_to_animate(rhsNode, all_nodes, all_edges)
+            
             let resEdges = [...lhsEdges, ...rhsEdges]
-            console.log(resEdges)
+
             if (lhsActive) {
                 resEdges = [...resEdges, lhsEdge]
             }
@@ -46,11 +41,48 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
             if (rhsActive) {
                 resEdges = [...resEdges, rhsEdge]
             }
+
             return [rhsActive || lhsActive, resEdges]
+        case "andNode":
+            const lhsEdgeAnd = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
+            const rhsEdgeAnd = allConnectedEdges.find((edge) => {return edge.targetHandle == 'b' && edge.target == current_node.id});
+        
+            const lhsNodeAnd = lhsEdgeAnd == null ? null : allIncoming.find((node) => {return node.id === lhsEdgeAnd.source})
+            const rhsNodeAnd = rhsEdgeAnd == null ? null : allIncoming.find((node) => {return node.id === rhsEdgeAnd.source})
             
+            const [lhsActiveAnd, lhsEdgesAnd] = lhsNodeAnd == null ? [false, []] : get_edges_to_animate(lhsNodeAnd, all_nodes, all_edges)
+            const [rhsActiveAnd, rhsEdgesAnd] = rhsNodeAnd == null ? [false, []] : get_edges_to_animate(rhsNodeAnd, all_nodes, all_edges)
+            
+            let resEdgesAnd = [...lhsEdgesAnd, ...rhsEdgesAnd]
+        
+            if (lhsActiveAnd && rhsActiveAnd) {
+                resEdgesAnd = [...resEdgesAnd, lhsEdgeAnd, rhsEdgeAnd]
+            }
+        
+            return [lhsActiveAnd && rhsActiveAnd, resEdgesAnd]
+        
+        case "xorNode":
+            const lhsEdgeXor = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
+            const rhsEdgeXor = allConnectedEdges.find((edge) => {return edge.targetHandle == 'b' && edge.target == current_node.id});
+        
+            const lhsNodeXor = lhsEdgeXor == null ? null : allIncoming.find((node) => {return node.id === lhsEdgeXor.source})
+            const rhsNodeXor = rhsEdgeXor == null ? null : allIncoming.find((node) => {return node.id === rhsEdgeXor.source})
+            
+            const [lhsActiveXor, lhsEdgesXor] = lhsNodeXor == null ? [false, []] : get_edges_to_animate(lhsNodeXor, all_nodes, all_edges)
+            const [rhsActiveXor, rhsEdgesXor] = rhsNodeXor == null ? [false, []] : get_edges_to_animate(rhsNodeXor, all_nodes, all_edges)
+            
+            let resEdgesXor = [...lhsEdgesXor, ...rhsEdgesXor]
+        
+            if (lhsActiveXor != rhsActiveXor) {
+                resEdgesXor = [...resEdgesXor, lhsEdgeXor, rhsEdgeXor]
+            }
+        
+            return [lhsActiveXor != rhsActiveXor, resEdgesXor]
+        case "pandNode":
+        case "spareNode":
+        case "fdep":    
         default:
             throw new Error("Exploring node of unknown type");
-            // return [false, []]
             break;
     }
 }
