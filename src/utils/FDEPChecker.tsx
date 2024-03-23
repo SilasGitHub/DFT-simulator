@@ -43,6 +43,7 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
             }
 
             return [rhsActive || lhsActive, resEdges]
+        case "spareNode":
         case "andNode":
             const lhsEdgeAnd = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
             const rhsEdgeAnd = allConnectedEdges.find((edge) => {return edge.targetHandle == 'b' && edge.target == current_node.id});
@@ -95,9 +96,8 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
             }
         
             return [lhsActivePand && rhsActivePand && lhsNodePand.data.failed < rhsNodePand.data.failed, resEdgesPand]
-            
-        case "spareNode":
-        case "fdep":    
+        case "fdep":  
+            break;
         default:
             throw new Error("Exploring node of unknown type");
             break;
