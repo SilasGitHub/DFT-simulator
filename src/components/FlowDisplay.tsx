@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import ReactFlow, {
     addEdge,
     Background,
@@ -38,6 +38,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
+	const [disabled, setDisabled] = React.useState(false);
 
     React.useCallback(() => {
         console.log(getConnectedEdges(nodes, edges))
@@ -51,6 +52,40 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         event.preventDefault()
         event.dataTransfer.dropEffect = "move"
     }, [])
+
+	
+
+	useEffect(() => {
+		//Disable/enable interaction with the FlowDisplay
+		setDisabled(props.currentlyAnimating);
+		if (!props.currentlyAnimating) {
+			setNodes(nodes.map(node => {
+				node.data.failed = props.selected.includes(node.id) ? true : null; 
+				return node;
+			}))
+			return;
+		}
+
+		// const wait1Sec = async () => {
+		// 	await ;
+		// }
+
+		const toFail = props.selected;
+	
+
+		(async () => {
+			while (props.currentlyAnimating) {
+				console.log("test " + toFail.length)
+				await delay(1000);
+			}	
+		})()
+	}, [props.currentlyAnimating])
+
+function delay(milliseconds : number){
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
             event.preventDefault()
@@ -112,7 +147,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 if (nd.id === node.id) {
                     nd.data = {
                         ...nd.data,
-                        failed: nd.data.failed === null ? null : !nd.data.failed,
+                        failed: nd.data.failed === null ? true : null,
                     }
                 }
                 return nd
@@ -135,6 +170,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnectWrap}
                     onNodeClick={onNodeClick}
+					edgesUpdatable={!disabled}
+					edgesFocusable={!disabled}
+					nodesDraggable={!disabled}
+					nodesConnectable={!disabled}
+					nodesFocusable={!disabled}
+					elementsSelectable={!disabled}
                 >
                     <Controls/>
                     <MiniMap/>
