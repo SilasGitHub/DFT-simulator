@@ -14,6 +14,16 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
-	'no-mixed-spaces-and-tabs' : 'off'
+    'no-mixed-spaces-and-tabs' : 'off',
+    "@typescript-eslint/no-unused-vars": [
+      "warn", // or "error"
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "eqeqeq": "error",
   },
 }

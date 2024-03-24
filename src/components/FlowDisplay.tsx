@@ -1,169 +1,146 @@
-import React, { useEffect } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, ReactFlowProvider, useNodesState, useEdgesState, addEdge, getConnectedEdges, Node} from 'reactflow'
-import 'reactflow/dist/style.css';import EventNode from './nodes/EventNode';
-import OrNode from './nodes/OrNode';
-import AndNode from './nodes/AndNode';
-import SpareNode from './nodes/SpareNode';
-import FDEPNode from './nodes/FdepNode';
-import XOrNode from './nodes/XorNode';
-import PAndNode from './nodes/PAndNode';
-import expore_fdep from '../utils/FDEPChecker';
-import SystemNode from './nodes/SystemNode';
-import get_edges_to_animate from '../utils/FDEPChecker';
-``
+import React from "react"
+import ReactFlow, {
+    addEdge,
+    Background,
+    BackgroundVariant,
+    Connection,
+    Controls,
+    getConnectedEdges,
+    MiniMap,
+    Node,
+    ReactFlowInstance,
+    ReactFlowProvider,
+    useEdgesState,
+    useNodesState,
+} from "reactflow"
+import "reactflow/dist/style.css"
+import {EventNodeType, nodeMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 
-const nodeTypes = {sysNode: SystemNode, eventNode: EventNode, orNode: OrNode, xorNode: XOrNode, andNode: AndNode, pandNode: PAndNode, spareNode: SpareNode, fdep: FDEPNode};
+const initialNodes: NodeUnion[] = [
+    // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
+    // { id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
+    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 100, y: 200}, type: NodeType.SYSTEM_NODE}
+]
 
-const initialNodes = [      // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
-//{ id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
-{ id: '1', data: {}, position: { x: 100, y: 200 }, type: 'sysNode' }]
+const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
-const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
-
-
-let id = 0;
-const getId = () => `dndnode_${id++}`;
+let id = 0
+const getId = () => `dndnode_${id++}`
 
 interface FlowDisplayProps {
-    selected : Array<string>,
-	setSelected :  React.Dispatch<React.SetStateAction<string[]>>
+    selected: Array<string>,
+    setSelected: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 export default function FlowDisplay(props: FlowDisplayProps) {
-  const reactFlowWrapper = React.useRef(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
-  const [updateFail, doUpdateFail] = React.useState<number | null>()
+    const reactFlowWrapper = React.useRef(null)
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+    const [edges, setEdges, onEdgesChange] = useEdgesState([])
+    const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
 
-React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
+    React.useCallback(() => {
+        console.log(getConnectedEdges(nodes, edges))
+    }, [nodes])
 
-  const onConnect = React.useCallback((params) => {
-    // console.log(params)
-    setEdges((eds) => addEdge(params, eds))
-  }, []);
-  
-  const onDragOver = React.useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
+    const onConnect = React.useCallback((connection: Connection) => {
+        setEdges((eds) => addEdge(connection, eds))
+    }, [])
 
-  const onDrop = React.useCallback(
-    (event) => {
-      
-      event.preventDefault();
+    const onDragOver = React.useCallback((event: React.DragEvent) => {
+        event.preventDefault()
+        event.dataTransfer.dropEffect = "move"
+    }, [])
 
-      const type = event.dataTransfer.getData('application/reactflow');
+    const onDrop = React.useCallback((event: React.DragEvent) => {
+            event.preventDefault()
+            if (reactFlowInstance === null) {
+                return
+            }
 
-      // check if the dropped element is valid
-      if (typeof type === 'undefined' || !type) {
-        return;
-      }
-      // reactFlowInstance.project was renamed to reactFlowInstance.screenToFlowPosition
-      // and you don't need to subtract the reactFlowBounds.left/top anymore
-      // details: https://reactflow.dev/whats-new/2023-11-10
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-      const newNode = {
-        id: getId(),
-        type,
-        position,
-        data: { label: `${alphabet[id % alphabet.length]}` },
-      };
+            const type = event.dataTransfer.getData("application/reactflow")
 
-      if (type == "eventNode") {
-        newNode.data = {...newNode.data, failed: null}
-        console.log(newNode);
-      }
+            // check if the dropped element is valid
+            if (typeof type === "undefined" || !type) {
+                return
+            }
+            // reactFlowInstance.project was renamed to reactFlowInstance.screenToFlowPosition
+            // and you don't need to subtract the reactFlowBounds.left/top anymore
+            // details: https://reactflow.dev/whats-new/2023-11-10
+            const position = reactFlowInstance.screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            })
+            const newNode = {
+                id: getId(),
+                type,
+                position,
+                data: {label: `${alphabet[id % alphabet.length]}`},
+            } as EventNodeType
 
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [reactFlowInstance],
-  );
+            if (type === NodeType.EVENT_NODE) {
+                newNode.data = {...newNode.data, failed: null}
+                console.log(newNode)
+            }
 
-    const update = React.useEffect(()=> {
-      if (!updateFail) {
-        return
-      }
-      doUpdateFail(null)
+            setNodes((nds) => nds.concat(newNode))
+        },
+        [reactFlowInstance],
+    )
 
-      const start_node = nodes.find((val, idx, arr) => {return val.type === "sysNode"});
-      if (start_node == null) {
-        return;
-      }
-  
-      const [failed, edges_to_animate] = get_edges_to_animate(start_node, nodes, edges);
-      console.log("AAA")
-      console.log(edges_to_animate)
-      setEdges((edgs) => {
-        return edgs.map((ed) => {
-          if (edges_to_animate.includes(ed)) {
-            ed.animated = true
-          } else {
-            ed.animated = false
-          }
-          return ed
-        })
-      })
-    }, [edges, nodes]);
-
-  const onConnectWrap = (params) => {
-    onConnect(params)
-    //doUpdateFail(Date.now());
-  }
-
-
-  const onNodeClick = (ev, node : Node) => {
-    if (node.type !== "eventNode") {
-      return;
+    const onConnectWrap = (connection: Connection) => {
+        onConnect(connection)
+        // doUpdateFail(Date.now())
     }
 
-	// If we double click on a basic event node, select or unselect it from the list of events to fail
-	if (props.selected.includes(node.id)) {
-		props.setSelected(props.selected.filter((id) => id != node.id));
-	} else {
-		props.setSelected(props.selected.concat([node.id]));
-	}
-
-	// Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
-    setNodes((nds) => {
-      //doUpdateFail(Date.now());
-      return nds.map((nd) => {
-        if (nd.id == node.id) {
-          nd.data = {
-            ...nd.data,
-            failed: nd.data.failed ? null : Date.now()
-          }
+    const onNodeClick = (_: React.MouseEvent, node: Node) => {
+        if (node.type !== NodeType.EVENT_NODE) {
+            return
         }
-        return nd;
-      });
-    });
 
-  }
+        // If we double click on a basic event node, select or unselect it from the list of events to fail
+        if (props.selected.includes(node.id)) {
+            props.setSelected(props.selected.filter((id) => id !== node.id))
+        } else {
+            props.setSelected(props.selected.concat([node.id]))
+        }
+
+        // Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
+        setNodes((nds) => {
+            //doUpdateFail(Date.now());
+            return nds.map((nd) => {
+                if (nd.id === node.id) {
+                    nd.data = {
+                        ...nd.data,
+                        failed: nd.data.failed === null ? null : !nd.data.failed,
+                    }
+                }
+                return nd
+            })
+        })
+
+    }
 
     return (
-      <ReactFlowProvider>
-        <div className="reactflow-wrapper" ref={reactFlowWrapper}>
-        <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onInit={setReactFlowInstance}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnectWrap}
-        onNodeClick={onNodeClick}
-      >
-        <Controls />
-        <MiniMap />
-        <Background variant="dots" gap={12} size={1} />
-      </ReactFlow>
-      </div>
-      </ReactFlowProvider>
+        <ReactFlowProvider>
+            <div className="reactflow-wrapper" ref={reactFlowWrapper}>
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    nodeTypes={nodeMap}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onInit={setReactFlowInstance}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnectWrap}
+                    onNodeClick={onNodeClick}
+                >
+                    <Controls/>
+                    <MiniMap/>
+                    <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
+                </ReactFlow>
+            </div>
+        </ReactFlowProvider>
 
-    );
+    )
 }
