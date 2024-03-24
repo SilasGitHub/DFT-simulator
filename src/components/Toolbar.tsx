@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import {NodeType} from "./nodes/Nodes.ts"
 
 interface ToolbarProps {
     selected : Array<string>,
@@ -10,7 +11,7 @@ export default function Toolbar(props : ToolbarProps) {
 	const [dragged, setDragged] = useState<number | null>(null);
 	const [mouse, setMouse] = useState<[number, number]>([0, 0]);
 	const [dropZone, setDropZone] = useState(0);
-    const onDragStart = (event, nodeType) => {
+    const onDragStart = (event: React.DragEvent<HTMLDivElement>, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
         event.dataTransfer.effectAllowed = 'move';
       };
@@ -65,10 +66,10 @@ export default function Toolbar(props : ToolbarProps) {
 	const reorderList = <T,>(l: T[], start: number, end: number) => {
 		if (start < end) return _reorderListForward([...l], start, end);
 		else if (start > end) return _reorderListBackward([...l], start, end);
-	  
+
 		return l; // if start == end
 	  };
-	  
+
 
 	const _reorderListForward = <T,>(l: T[], start: number, end: number) => {
 		const temp = l[start];
@@ -83,40 +84,40 @@ export default function Toolbar(props : ToolbarProps) {
 
 	const _reorderListBackward = <T,>(l: T[], start: number, end: number) => {
 		const temp = l[start];
-	  
+
 		for (let i = start; i > end; i--) {
 		  l[i] = l[i - 1];
 		}
-	  
+
 		l[end] = temp;
-	  
+
 		return l;
-	  };	  
-	  
+	  };
+
 	return (
 	<div className='toolbarWrapper'>
 		<div>
 			Drag & drop nodes
 			<aside className="node-drag">
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'eventNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
 					Fail Event
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'andNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)} draggable>
 					AND
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'pandNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.PAND_NODE)} draggable>
 					PAND
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'orNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)} draggable>
 					OR
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'xorNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.XOR_NODE)} draggable>
 					XOR
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'fdep')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.FDEP_NODE)} draggable>
 					FDEP
 				</div>
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'spareNode')} draggable>
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.SPARE_NODE)} draggable>
 					SPARE
 				</div>
 			</aside>
