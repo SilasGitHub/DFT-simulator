@@ -9,7 +9,7 @@ export default function App() {
 	return (
 	<div style={{ width: '100vw', height: '100vh', display: "flex"}}>
 		<div>
-			<Toolbar selected={selected} setSelected={setSelected}/>	
+			<Toolbar selected={selected} setSelected={setSelected}/>
 		</div>
 		{/* <div> */}
 			<FlowDisplay selected={selected} setSelected={setSelected}/>
