@@ -3,13 +3,13 @@
 // Take into consideration the semantics of the currently expored node (e.g.: if exporing an AND node, only return true if both paths returned true)
 import {getIncomers, Node, Edge} from 'reactflow';
 
-export default function get_edges_to_animate(system_node: Node, all_nodes: Node[], all_edges: Edge[]): [boolean, Edge[]] {
+export default function get_edges_to_animate(system_node: Node, all_nodes: Node[], all_edges: Edge[]): Edge[] {
     const allIncoming = getIncomers(system_node, all_nodes, all_edges);
     if (allIncoming.length <= 0) {
-        return [false, []];
+        return [];
     }
-
-    return explore_binary_nodes(allIncoming[0], all_nodes, all_edges)
+    
+    return explore_binary_nodes(allIncoming[0], all_nodes, all_edges)[1]
 }
 
 function explore_binary_nodes(current_node: Node, all_nodes: Node[], all_edges: Edge[]): [boolean, Edge[]] {

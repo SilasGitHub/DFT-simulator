@@ -35,7 +35,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
   const onConnect = React.useCallback((params) => {
     // console.log(params)
     setEdges((eds) => addEdge(params, eds))
-  }, []);
+  }, [setEdges]);
   
   const onDragOver = React.useCallback((event) => {
     event.preventDefault();
@@ -74,7 +74,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance],
+    [reactFlowInstance, setNodes],
   );
 
     const update = React.useEffect(()=> {
@@ -88,7 +88,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
         return;
       }
   
-      const [failed, edges_to_animate] = get_edges_to_animate(start_node, nodes, edges);
+      const edges_to_animate = get_edges_to_animate(start_node, nodes, edges);
       console.log("AAA")
       console.log(edges_to_animate)
       setEdges((edgs) => {
@@ -101,7 +101,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
           return ed
         })
       })
-    }, [edges, nodes]);
+    }, [edges, nodes, setEdges, updateFail]);
 
   const onConnectWrap = (params) => {
     onConnect(params)
