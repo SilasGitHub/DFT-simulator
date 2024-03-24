@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, ReactFlowProvider, useNodesState, useEdgesState, addEdge, getConnectedEdges} from 'reactflow'
+import ReactFlow, { Background, Controls, MiniMap, ReactFlowProvider, useNodesState, useEdgesState, addEdge, getConnectedEdges, Node} from 'reactflow'
 import 'reactflow/dist/style.css';import EventNode from './nodes/EventNode';
 import OrNode from './nodes/OrNode';
 import AndNode from './nodes/AndNode';
@@ -12,18 +12,24 @@ import SystemNode from './nodes/SystemNode';
 import get_edges_to_animate from '../utils/FDEPChecker';
 ``
 
-const nodeTypes = {sysNode: SystemNode, sourceNode: EventNode, orNode: OrNode, xorNode: XOrNode, andNode: AndNode, pandNode: PAndNode, spareNode: SpareNode, fdep: FDEPNode};
+const nodeTypes = {sysNode: SystemNode, eventNode: EventNode, orNode: OrNode, xorNode: XOrNode, andNode: AndNode, pandNode: PAndNode, spareNode: SpareNode, fdep: FDEPNode};
 
-const initialNodes = [      // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'sourceNode' },
+const initialNodes = [      // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
 //{ id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
 { id: '1', data: {}, position: { x: 100, y: 200 }, type: 'sysNode' }]
 
 const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 
+
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-export default function FlowDisplay() {
+interface FlowDisplayProps {
+    selected : Array<string>,
+	setSelected :  React.Dispatch<React.SetStateAction<string[]>>
+}
+
+export default function FlowDisplay(props: FlowDisplayProps) {
   const reactFlowWrapper = React.useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -67,7 +73,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
         data: { label: `${alphabet[id % alphabet.length]}` },
       };
 
-      if (type == "sourceNode") {
+      if (type == "eventNode") {
         newNode.data = {...newNode.data, failed: null}
         console.log(newNode);
       }
@@ -105,16 +111,25 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
 
   const onConnectWrap = (params) => {
     onConnect(params)
-    doUpdateFail(Date.now());
+    //doUpdateFail(Date.now());
   }
 
-  const onNodeClick = (ev, node) => {
-    if (node.type !== "sourceNode") {
+
+  const onNodeClick = (ev, node : Node) => {
+    if (node.type !== "eventNode") {
       return;
     }
 
+	// If we double click on a basic event node, select or unselect it from the list of events to fail
+	if (props.selected.includes(node.id)) {
+		props.setSelected(props.selected.filter((id) => id != node.id));
+	} else {
+		props.setSelected(props.selected.concat([node.id]));
+	}
+
+	// Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
     setNodes((nds) => {
-      doUpdateFail(Date.now());
+      //doUpdateFail(Date.now());
       return nds.map((nd) => {
         if (nd.id == node.id) {
           nd.data = {
@@ -122,7 +137,6 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
             failed: nd.data.failed ? null : Date.now()
           }
         }
-
         return nd;
       });
     });
@@ -142,7 +156,7 @@ React.useCallback(() => {console.log(getConnectedEdges(nodes, edges))}, [nodes])
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnectWrap}
-        onNodeDoubleClick={onNodeClick}
+        onNodeClick={onNodeClick}
       >
         <Controls />
         <MiniMap />

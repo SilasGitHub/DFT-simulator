@@ -20,7 +20,7 @@ export default function get_edges_to_animate(current_node: Node, all_nodes: Node
             } else {
                 return [active, edges]
             }
-        case "sourceNode":
+        case "eventNode":
             return [current_node.data.failed, []]
         case "orNode":
             const lhsEdge = allConnectedEdges.find((edge) => {return edge.targetHandle == 'a' && edge.target == current_node.id});
