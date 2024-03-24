@@ -1,4 +1,4 @@
-.wrapper {
+/* .wrapper {
 	background-color: #fff9e6;
 	padding: 20px;
 	border-radius: 10px;
@@ -6,4 +6,82 @@
 
 h1 {
 	color: #8873be;
+} */
+
+.gate {
+	background: white;
+	border: 1px solid black;
+	text-align: center;
+	justify-content: center;
+	display: flex;
+	text-align: center;
 }
+
+.dot {
+	height: 50px;
+	width: 50px;
+	border-radius: 50%;
+}
+
+.or {
+	min-height: 100px;
+	min-width: 60px;
+	height: 100%;
+}
+
+.spare {
+	height:100px;
+	width: 160px;
+	/* height: 100%; */
+	justify-content: space-between;
+	flex-direction: column;
+}
+
+.and {
+	min-height: 100px;
+	min-width: 60px;
+	height: 100%;
+}
+
+.gate-img {
+	object-fit: contain;
+}
+
+.arrow-right {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 30px solid black;
+  }
+
+.dndnode {
+	width: 100%;
+	border: 1px solid black;
+}
+
+.node-drag {
+	text-align: center;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.reactflow-wrapper {
+	flex-grow: 1;
+	height: 100%;
+  }
+
+.handles {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	width: 10px;
+	height: 100%;
+	position: absolute;
+}
+
+/* .react-flow__handle-bottom {
+	transform: translate(0, 0);
+} */
