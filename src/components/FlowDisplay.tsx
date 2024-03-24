@@ -30,6 +30,7 @@ const getId = () => `dndnode_${id++}`
 interface FlowDisplayProps {
     selected: Array<string>,
     setSelected: React.Dispatch<React.SetStateAction<string[]>>
+	currentlyAnimating: boolean,
 }
 
 export default function FlowDisplay(props: FlowDisplayProps) {
