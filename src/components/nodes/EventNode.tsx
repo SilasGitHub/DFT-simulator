@@ -4,7 +4,7 @@ import {EventNodeData} from "./Nodes.ts"
 
 
 export default function EventNode({data}: NodeProps<EventNodeData>) {
-    const color = data.failed ? 'red' : 'green';
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
     return (
         <div className="dot gate" style={{backgroundColor: color}}>
           <p>{data.label}</p>

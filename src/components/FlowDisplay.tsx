@@ -19,7 +19,7 @@ import {EventNodeType, nodeMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 const initialNodes: NodeUnion[] = [
     // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
     // { id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
-    {id: "1", data: {failed: false, label: "SYS"}, position: {x: 100, y: 200}, type: NodeType.SYSTEM_NODE}
+    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 100, y: 200}, type: NodeType.SYSTEM_NODE}
 ]
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -78,7 +78,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             } as EventNodeType
 
             if (type === NodeType.EVENT_NODE) {
-                newNode.data = {...newNode.data, failed: false}
+                newNode.data = {...newNode.data, failed: null}
                 console.log(newNode)
             }
 
@@ -111,7 +111,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 if (nd.id === node.id) {
                     nd.data = {
                         ...nd.data,
-                        failed: nd.data.failed ? false : Date.now(),
+                        failed: nd.data.failed === null ? null : !nd.data.failed,
                     }
                 }
                 return nd

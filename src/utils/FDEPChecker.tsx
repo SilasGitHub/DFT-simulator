@@ -25,7 +25,7 @@ export default function get_edges_to_animate(current_node: NodeUnion, all_nodes:
             }
         }
         case NodeType.EVENT_NODE:
-            return [current_node.data.failed, []]
+            return [current_node.data.failed ?? false, []]
         case NodeType.OR_NODE: {
             const lhsEdge = allConnectedEdges.find((edge) => {
                 return edge.targetHandle === "a" && edge.target === current_node.id
@@ -138,7 +138,7 @@ export default function get_edges_to_animate(current_node: NodeUnion, all_nodes:
             const [rhsActivePand, rhsEdgesPand] = !rhsNodePand ? [false, []] : get_edges_to_animate(rhsNodePand, all_nodes, all_edges)
 
             const resEdgesPand = [...lhsEdgesPand, ...rhsEdgesPand]
-            if (lhsActivePand && rhsActivePand && lhsNodePand?.data.failed < rhsNodePand?.data.failed) {
+            if (lhsActivePand && rhsActivePand && lhsNodePand?.data.simulation?.failed < rhsNodePand?.data.simulation?.failed) {
                 if (lhsEdgePand) {
                     resEdgesPand.push(lhsEdgePand)
                 }
@@ -147,7 +147,7 @@ export default function get_edges_to_animate(current_node: NodeUnion, all_nodes:
                 }
             }
 
-            return [lhsActivePand && rhsActivePand && lhsNodePand?.data.failed < rhsNodePand?.data.failed, resEdgesPand]
+            return [lhsActivePand && rhsActivePand && lhsNodePand?.data.simulation?.failed < rhsNodePand?.data.simulation?.failed, resEdgesPand]
         }
         case NodeType.FDEP_NODE:
             break

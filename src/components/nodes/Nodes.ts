@@ -10,7 +10,7 @@ import SpareNode from "./SpareNode.tsx"
 
 export type CommonNodeData = {
     label: string;
-    failed: boolean;
+    failed: null | boolean;
 }
 
 export type SystemNodeData = CommonNodeData
