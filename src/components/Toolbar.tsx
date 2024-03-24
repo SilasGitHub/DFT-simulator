@@ -5,6 +5,7 @@ interface ToolbarProps {
 	setSelected :  React.Dispatch<React.SetStateAction<string[]>>
 }
 
+// Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
 export default function Toolbar(props : ToolbarProps) {
 	const [dragged, setDragged] = useState<number | null>(null);
 	const [mouse, setMouse] = useState<[number, number]>([0, 0]);
@@ -120,7 +121,7 @@ export default function Toolbar(props : ToolbarProps) {
 				</div>
 			</aside>
 		</div>
-		<div>
+		<div hidden={props.selected.length === 0}>
 			Selected Ids
 			<aside>
 				{/* ----------FLOATING ITEM---------- */}

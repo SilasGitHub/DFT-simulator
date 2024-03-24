@@ -83,10 +83,6 @@ h1 {
 	position: absolute;
 }
 
-/* .react-flow__handle-bottom {
-	transform: translate(0, 0);
-} */
-
 .list {
 	display: flex;
 	flex-direction: column;
@@ -111,7 +107,8 @@ h1 {
 .toolbarWrapper {
 	display: flex;
 	flex-direction: column;
-	overflow-x: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .floating {

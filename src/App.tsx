@@ -4,7 +4,7 @@ import Toolbar from "./components/Toolbar";
 import './css/main.css'
 
 export default function App() {
-	const [selected, setSelected] = useState([] as string[]);
+	const [selected, setSelected] = useState(new Array<string>()); 
 
 	return (
 	<div style={{ width: '100vw', height: '100vh', display: "flex"}}>
