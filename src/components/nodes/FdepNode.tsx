@@ -1,25 +1,50 @@
 import {NodeProps, Position} from "reactflow"
-import CustomHandle from '../CustomHandle';
+import CustomHandle from "../CustomHandle"
 import {FdepNodeData} from "./Nodes"
+import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
 
-export default function FDEPNode({data}: NodeProps<FdepNodeData>) {
-	const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+export default function FDEPNode({id, data}: NodeProps<FdepNodeData>) {
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
+    // dynamically create more handles
+    const connectedSources = useDynamicHandles(id, "dependent-")
+    const nHandles = Math.max(connectedSources.length + 1, 1)
+    const spacing = 80 / (nHandles + 1)
+
     return (
-        <div className='gate spare' style={{backgroundColor: color, justifyContent: 'flex-end'}}>
-                        {/* <NodeResizer isVisible={selected} minWidth={60} minHeight={100} keepAspectRatio={true} /> */}
+        <div className="entity spare" style={{backgroundColor: color, justifyContent: "flex-end"}}>
+            {/*<CustomHandle type="source" position={Position.Top} id="a" isConnectable={1}/>*/}
+            <CustomHandle
+                type="target"
+                position={Position.Left}
+                id="trigger"
+                isConnectable={1}
+                style={{top: "auto", bottom: "10px"}}
+            />
 
-            {/* <p>{data.label}</p> */}
-            <CustomHandle type="source" position={Position.Top} id='a' isConnectable={1} />
-            <CustomHandle type="target" position={Position.Bottom} id='dependent-b' isConnectable style={{right: "12%", left: 'auto'}}/>
-            <CustomHandle type="target" position={Position.Left} id='trigger-c' isConnectable={1} style={{top: 'auto', bottom: '2px'}}/>
+            <CustomHandle
+                type="target"
+                position={Position.Bottom}
+                style={{left: (20 + spacing) + "%"}}
+                id="dependent-1"
+                isConnectable={1}
+            />
+            {connectedSources.map((edge, i) => (
+                <CustomHandle
+                    type="target"
+                    position={Position.Bottom}
+                    id={"dependent-" + edge.id + edge.targetHandle}
+                    key={edge.id + edge.targetHandle}
+                    style={{left: 20 + (spacing * (i + 2)) + "%"}}
+                    isConnectable={1}
+                />
+            ))}
 
-            <div style={{height: "20%", borderTop: "1px solid black", display: "flex", flexDirection: "row", justifyContent: "space-betweem", textAlign: "center"}}>
-                <div style={{flexGrow: 2}} className='arrow-right'></div>
-                <div style={{flexGrow: 1, borderLeft: "1px solid black"}}>
-
-                </div>
+            <p>FDEP</p>
+            <div style={{borderTop: "2px solid black"}}>
+                <div className="arrow-right"></div>
             </div>
         </div>
-      );
+    )
 }
