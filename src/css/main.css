@@ -139,3 +139,8 @@ path.react-flow__edge-path {
 path.react-flow__edge-path:hover {
 	stroke-width: 4;
 }
+
+.react-flow__node.selected {  
+	background: rgba(0, 89, 220, 0.08);
+	border: 4px dotted rgba(0, 89, 220, 0.8);
+}
