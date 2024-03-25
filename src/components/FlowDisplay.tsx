@@ -18,16 +18,17 @@ import {EventNodeType, nodeMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
 
 const initialNodes: NodeUnion[] = [
-    // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
-    // { id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
     {id: "1", data: {failed: null, label: "SYS"}, position: {x: 800, y: 450}, selectable: false, type: NodeType.SYSTEM_NODE},
 ]
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
 let order = 1
-let id = 0
-const getId = () => `dndnode_${id++}`
+const idMapper = new Map<string, number>();
+function getId(type : string) {
+	idMapper.set(type, idMapper.has(type) ? (idMapper.get(type) as number) + 1 : 0);
+	return `${type}_${idMapper.get(type)}`
+}
 
 interface FlowDisplayProps {
     selected: Array<string>,
@@ -48,7 +49,6 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     let toFail = new Array<string>()
 
     React.useCallback(() => {
-        console.log(getConnectedEdges(nodes, edges))
     }, [nodes])
     const onConnect = React.useCallback((connection: Connection) => {
         setEdges((eds) => addEdge(connection, eds))
@@ -74,9 +74,8 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 
     const doAnimate = React.useCallback(() => {
         if (!running) {
-            console.log("not running anymore")
-            toFail = []
-            return
+            toFail = [];
+            return;
         }
 
 		if (toFail.length === 0) {
@@ -185,7 +184,6 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 			const {outgoingNodes} = getOutgoingNodesAndEdges(node);
 			toFail = outgoingNodes.map(node => node.id).concat(toFail);
 		}
-        console.log("Running:" + running)
         setTimeout(() => {
             doAnimate()
         }, 1000)
@@ -228,11 +226,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 x: event.clientX,
                 y: event.clientY,
             })
+			
             const newNode = {
-                id: getId(),
+                id: getId(type),
                 type,
                 position,
-                data: {label: `${alphabet[id % alphabet.length]}`, failed: null},
+                data: {label: `${alphabet[idMapper.get(type) as number % alphabet.length]}`, failed: null},
 				selected: true,
             } as EventNodeType
 
