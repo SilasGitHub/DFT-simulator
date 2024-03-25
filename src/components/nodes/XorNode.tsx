@@ -4,7 +4,9 @@ import CustomHandle from "../CustomHandle"
 import {XorNodeData} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
-export default function XOrNode({id}: NodeProps<XorNodeData>) {
+export default function XOrNode({id, data}: NodeProps<XorNodeData>) {
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id)
     const nHandles = Math.max(connectedSources.length + 1, 2)
@@ -37,7 +39,7 @@ export default function XOrNode({id}: NodeProps<XorNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className="gate-img" style={{transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgXOr}/>
+            <img className="gate-img" style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgXOr}/>
         </div>
     )
 }

@@ -5,7 +5,9 @@ import {PAndNodeData} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
 
-export default function PAndNode({id}: NodeProps<PAndNodeData>) {
+export default function PAndNode({id, data}: NodeProps<PAndNodeData>) {
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id)
     const nHandles = Math.max(connectedSources.length + 1, 2)
@@ -44,7 +46,7 @@ export default function PAndNode({id}: NodeProps<PAndNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className='gate-img' style={{transformOrigin: 'center', transform: 'rotate(-90deg)'}} src={PAndSvg}/>
+            <img className='gate-img' style={{backgroundColor: color, transformOrigin: 'center', transform: 'rotate(-90deg)'}} src={PAndSvg}/>
         </div>
       );
 }

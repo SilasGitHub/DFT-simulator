@@ -110,11 +110,8 @@ export default function Toolbar(props : ToolbarProps) {
 		<div>
 			Drag & drop nodes
 			<aside className="node-drag"> 
-				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'eventNode')} draggable>
-					Basic Event
-				</div>
 				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
-					Fail Event
+					Basic Event
 				</div>
 				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)} draggable>
 					AND

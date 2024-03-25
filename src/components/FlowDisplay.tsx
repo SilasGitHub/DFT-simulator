@@ -27,6 +27,7 @@ const initialNodes: NodeUnion[] = [
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
+let order = 1;
 let id = 0
 const getId = () => `dndnode_${id++}`
 
@@ -43,11 +44,13 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
-	const [disabled, setDisabled] = React.useState(false);
+	  const [disabled, setDisabled] = React.useState(false);
+  
+	  let toFail = new Array<string>();
+
     React.useCallback(() => {
         console.log(getConnectedEdges(nodes, edges))
     }, [nodes])
-	let toFail = new Array<string>();
     const onConnect = React.useCallback((connection: Connection) => {
         setEdges((eds) => addEdge(connection, eds))
     }, [])
@@ -59,22 +62,29 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 
 	function resetAnimation() {
 		setNodes(nodes.map(node => {
-			node.data.failed = false;
+			if ((node as NodeUnion).type === NodeType.EVENT_NODE && node.data.isSpare) {
+				node.data.failed = null;
+				node.data.beingUsedBy = null;
+			} else {
+				node.data.failed = 0;
+			}
 			return node;
 		}))
 	}
 
-	function getAdjacent(node : Node) : [edges : string[], nodes:string[]] {
-		const adjacentNodes = getOutgoers(node, nodes, edges);
-		const adjacentEdges = edges.filter(edge => (edge.sourceNode === node || edge.targetNode === node) && 
-			(adjacentNodes.includes(edge.targetNode as Node) || adjacentNodes.includes(edge.sourceNode as Node)));
-		return [adjacentEdges.map(edge => edge.id), adjacentNodes.map(node => node.id)]
+	function getOutgoingNodesAndEdges(node : Node) : [edges : Edge[], nodes: Node[]] {
+		const outgoingNodes = getOutgoers(node, nodes, edges);
+		const outgoingEdges = edges.filter(edge => (edge.sourceNode === node || edge.targetNode === node) && 
+			(outgoingNodes.includes(edge.targetNode as Node) || outgoingNodes.includes(edge.sourceNode as Node)));
+		return [outgoingEdges, outgoingNodes]
 	}
 
 	function getChildren(node : Node) : Node[] {
-		const result = getIncomers(node, nodes, edges);
-		console.log(result);
-		return result;
+		return getIncomers(node, nodes, edges);
+	}
+
+	function getIncomingEdges(node : Node) : Edge[] {
+		return edges.filter(edge => edge.target === node.id);
 	}
 	
 	const doAnimate : any =() => {
@@ -84,33 +94,98 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             return;
         }
 
-		console.log(toFail);
 		if (toFail.length === 0) {
 			toFail = [...props.selected];
 			resetAnimation();
 		} else {
 			const nodeName = toFail.shift();
 			const node = nodes.find(node => node.id === nodeName) as NodeUnion;
-			console.log(node)
+			let nextState : number;
 			switch (node.type) {
 				case (NodeType.SYSTEM_NODE) : {
-					setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
+					const children = getChildren(node);
+					nextState = children.some(child => child.data.failed) ? order++ : 0;
 					break;
 				}
 				case (NodeType.EVENT_NODE) : {
-					setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
-					const [adjacentEdges, adjacentNodes] = getAdjacent(node);
-					toFail = adjacentNodes.concat(toFail);
+					nextState = order++;
 					break;
 				}
 				case (NodeType.AND_NODE) : {
 					const children = getChildren(node);
-					if (children.every(child => child.data.failed)) {
-						setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
-						const [adjacentEdges, adjacentNodes] = getAdjacent(node);
-						toFail = adjacentNodes.concat(toFail);
+					nextState = children.every(child => child.data.failed) ? order++ : 0;
+					break;
+				}
+				case (NodeType.OR_NODE) : {
+					const children = getChildren(node);
+					nextState = children.some(child => child.data.failed) ? order++ : 0;
+					break;
+				}
+				case (NodeType.XOR_NODE) : {
+					const children = getChildren(node);
+					const failedChildIndex = children.findIndex(child => child.data.failed);
+					children.splice(failedChildIndex, 1);
+					nextState = (failedChildIndex >= 0 && children.findIndex(child => child.data.failed) === -1) ? order++ : 0;
+					break;
+				}
+				case (NodeType.PAND_NODE) : {
+					const children = getChildren(node);
+					const failedList = children.map(child => {return child.data.failed})
+					nextState = failedList.every(function (x, i) { return x > 0 && (i === 0 || x >= failedList[i - 1]); }) ? order++ : 0;
+					break;
+				}
+				case (NodeType.SPARE_NODE) : {
+					const incomingEdges = getIncomingEdges(node);
+					const primaryNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("primary"))?.source
+					const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as Node;
+					const spareNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("spare")).map(edge => edge.source);
+					const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as Node);
+					const currentSpare = spareNodes.find(spare => spare.data.beingUsedBy === node.id && spare.data.failed === 0);
+					if (primaryNode.data.failed) {
+						if (!currentSpare) {
+							const inactiveSpare = spareNodes.find(node => node.data.failed === null);
+							if (inactiveSpare) {
+								inactiveSpare.data.beingUsedBy = node.id;
+								inactiveSpare.data.failed = 0;
+								setNodes(nodes.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd));
+								return setTimeout(() => { doAnimate(); }, 1000) ;
+							} else {
+								nextState = order++;
+								break;
+							}
+						} else {
+							nextState = 0;
+							break;
+						}
 					} else {
-						return doAnimate();
+						if (currentSpare) {
+							currentSpare.data.beingUsedBy === null;
+							currentSpare.data.failed = null;
+							setNodes(nodes.map(nd => nd.id === currentSpare.id ? currentSpare : nd));
+							return setTimeout(() => { doAnimate(); }, 1000) ;
+						}
+						nextState = 0; 
+						break;
+					}
+				}
+				case (NodeType.FDEP_NODE) : {
+					const incomingEdges = getIncomingEdges(node);
+					const triggerNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("trigger"))?.source
+					const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as Node;
+					const dependentNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("dependent")).map(edge => edge.source);
+					const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as Node);
+					nextState = triggerNode.data.failed ? order++ : 0;
+					if (triggerNode.data.failed) {
+						if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+							return doAnimate();
+						}
+						setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
+						const dependentNodesToFail = dependentNodes.filter(node => !node.data.failed);
+						if (dependentNodesToFail.length > 0) {
+							toFail = dependentNodesToFail.map(node => node.id).concat(toFail);
+							return setTimeout(() => { doAnimate(); }, 1000) ;
+						}
+						return;
 					}
 					break;
 				}
@@ -118,6 +193,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 					return;
 				}
 			}
+			if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+				return doAnimate();
+			}
+			setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
+			const [outgoingEdges, outgoingNodes] = getOutgoingNodesAndEdges(node);
+			toFail = outgoingNodes.map(node => node.id).concat(toFail);
 		}
         console.log("Running:" + running)
         setTimeout(() => {
@@ -133,16 +214,14 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 		setDisabled(running);
 		if (!running) {
 			setNodes(nodes.map(node => {
-				node.data.failed = props.selected.includes(node.id) ? true : null; 
+				node.data.failed = props.selected.includes(node.id) ? 1 : null; 
 				return node;
 			}))
 			return;
 		}
-
-
-        if (running) {
-            doAnimate();
-        }
+    if (running) {
+        doAnimate();
+    }
     }, [props.currentlyAnimating]);
 
 
@@ -178,6 +257,14 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     )
 
     const onConnectWrap = (connection: Connection) => {
+		const sourceNode = nodes.find(node => node.id === connection.source) as Node;
+		if (connection.targetHandle?.includes("spare") && sourceNode.type === NodeType.EVENT_NODE) {
+			sourceNode.data.isSpare = true;
+			setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+		} else if(!connection.targetHandle?.includes("dependent") && sourceNode.type === NodeType.EVENT_NODE) {
+			sourceNode.data.isSpare = false;
+			setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+		}
         onConnect(connection)
         // doUpdateFail(Date.now())
     }
@@ -201,6 +288,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 if (nd.id === node.id) {
                     nd.data = {
                         ...nd.data,
+                        failed: nd.data.failed === null ? 1 : null,
                         failed: nd.data.failed === null ? true : null,
                     }
                 }
@@ -213,7 +301,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     return (
         <ReactFlowProvider>
             <div className="reactflow-wrapper" ref={reactFlowWrapper}>
-                <ReactFlow
+			<ReactFlow
                     nodes={nodes}
                     edges={edges}
                     nodeTypes={nodeMap}
@@ -224,12 +312,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnectWrap}
                     onNodeClick={onNodeClick}
-					edgesUpdatable={!disabled}
-					edgesFocusable={!disabled}
-					nodesDraggable={!disabled}
-					nodesConnectable={!disabled}
-					nodesFocusable={!disabled}
-					elementsSelectable={!disabled}
+                    edgesUpdatable={!disabled}
+                    edgesFocusable={!disabled}
+                    nodesDraggable={!disabled}
+                    nodesConnectable={!disabled}
+                    nodesFocusable={!disabled}
+                    elementsSelectable={!disabled}
                 >
                     <Controls/>
                     <MiniMap/>

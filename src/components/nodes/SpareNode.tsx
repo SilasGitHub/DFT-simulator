@@ -3,14 +3,16 @@ import CustomHandle from '../CustomHandle';
 import {SpareNodeData} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
-export default function SpareNode({id}: NodeProps<SpareNodeData>) {
+export default function SpareNode({id, data}: NodeProps<SpareNodeData>) {
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id, "spare_")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
 
     return (
-        <div className='entity spare' style={{justifyContent: 'flex-end'}}>
+        <div className='entity spare' style={{backgroundColor: color, justifyContent: 'flex-end'}}>
             <CustomHandle
                 type="source"
                 position={Position.Top}
@@ -29,14 +31,14 @@ export default function SpareNode({id}: NodeProps<SpareNodeData>) {
                 type="target"
                 position={Position.Bottom}
                 style={{left: (20 + spacing) + "%"}}
-                id='spare_'
+                id='spare-'
                 isConnectable={1}
             />
             {connectedSources.map((edge, i) => (
                 <CustomHandle
                     type="target"
                     position={Position.Bottom}
-                    id={"spare_" + edge.id + edge.targetHandle}
+                    id={"spare-" + edge.id + edge.targetHandle}
                     key={edge.id + edge.targetHandle}
                     style={{left: 20 + (spacing * (i + 2)) + "%"}}
                     isConnectable={1}

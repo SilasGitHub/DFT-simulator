@@ -4,7 +4,9 @@ import CustomHandle from "../CustomHandle"
 import {OrNodeData} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
-export default function OrNode({id}: NodeProps<OrNodeData>) {
+export default function OrNode({id, data}: NodeProps<OrNodeData>) {
+    const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id)
     const nHandles = Math.max(connectedSources.length + 1, 2)
@@ -39,7 +41,7 @@ export default function OrNode({id}: NodeProps<OrNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className="gate-img" style={{transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgOr}/>
+            <img className="gate-img" style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgOr}/>
         </div>
     )
 }
