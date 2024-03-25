@@ -4,7 +4,7 @@ import Toolbar from "./components/Toolbar";
 import './css/main.css'
 
 export default function App() {
-	const [selected, setSelected] = useState(new Array<string>()); 
+	const [selected, setSelected] = useState(new Array<string>());  
 	const [currentlyAnimating, setCurrentlyAnimating] = useState(false);
 
 	return (

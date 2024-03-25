@@ -5,7 +5,10 @@ import ReactFlow, {
     BackgroundVariant,
     Connection,
     Controls,
+    Edge,
     getConnectedEdges,
+    getIncomers,
+    getOutgoers,
     MiniMap,
     Node,
     ReactFlowInstance,
@@ -33,17 +36,18 @@ interface FlowDisplayProps {
 	currentlyAnimating: boolean,
 }
 
+let running = false;
+
 export default function FlowDisplay(props: FlowDisplayProps) {
     const reactFlowWrapper = React.useRef(null)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
 	const [disabled, setDisabled] = React.useState(false);
-
     React.useCallback(() => {
         console.log(getConnectedEdges(nodes, edges))
     }, [nodes])
-
+	let toFail = new Array<string>();
     const onConnect = React.useCallback((connection: Connection) => {
         setEdges((eds) => addEdge(connection, eds))
     }, [])
@@ -53,12 +57,81 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         event.dataTransfer.dropEffect = "move"
     }, [])
 
-	
+	function resetAnimation() {
+		setNodes(nodes.map(node => {
+			node.data.failed = false;
+			return node;
+		}))
+	}
 
-	useEffect(() => {
+	function getAdjacent(node : Node) : [edges : string[], nodes:string[]] {
+		const adjacentNodes = getOutgoers(node, nodes, edges);
+		const adjacentEdges = edges.filter(edge => (edge.sourceNode === node || edge.targetNode === node) && 
+			(adjacentNodes.includes(edge.targetNode as Node) || adjacentNodes.includes(edge.sourceNode as Node)));
+		return [adjacentEdges.map(edge => edge.id), adjacentNodes.map(node => node.id)]
+	}
+
+	function getChildren(node : Node) : Node[] {
+		const result = getIncomers(node, nodes, edges);
+		console.log(result);
+		return result;
+	}
+	
+	const doAnimate : any =() => {
+        if (!running) {
+            console.log("not running anymore")
+			toFail = [];
+            return;
+        }
+
+		console.log(toFail);
+		if (toFail.length === 0) {
+			toFail = [...props.selected];
+			resetAnimation();
+		} else {
+			const nodeName = toFail.shift();
+			const node = nodes.find(node => node.id === nodeName) as NodeUnion;
+			console.log(node)
+			switch (node.type) {
+				case (NodeType.SYSTEM_NODE) : {
+					setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
+					break;
+				}
+				case (NodeType.EVENT_NODE) : {
+					setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
+					const [adjacentEdges, adjacentNodes] = getAdjacent(node);
+					toFail = adjacentNodes.concat(toFail);
+					break;
+				}
+				case (NodeType.AND_NODE) : {
+					const children = getChildren(node);
+					if (children.every(child => child.data.failed)) {
+						setNodes(nodes.map(nd => {nd.data.failed = nd === node ? true : nd.data.failed; return nd;}))
+						const [adjacentEdges, adjacentNodes] = getAdjacent(node);
+						toFail = adjacentNodes.concat(toFail);
+					} else {
+						return doAnimate();
+					}
+					break;
+				}
+				default : {
+					return;
+				}
+			}
+		}
+        console.log("Running:" + running)
+        setTimeout(() => {
+            doAnimate();
+        }, 1000) 
+
+    }
+
+    useEffect(() => {
+		running = props.currentlyAnimating;
+
 		//Disable/enable interaction with the FlowDisplay
-		setDisabled(props.currentlyAnimating);
-		if (!props.currentlyAnimating) {
+		setDisabled(running);
+		if (!running) {
 			setNodes(nodes.map(node => {
 				node.data.failed = props.selected.includes(node.id) ? true : null; 
 				return node;
@@ -66,26 +139,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 			return;
 		}
 
-		// const wait1Sec = async () => {
-		// 	await ;
-		// }
 
-		const toFail = props.selected;
-	
+        if (running) {
+            doAnimate();
+        }
+    }, [props.currentlyAnimating]);
 
-		(async () => {
-			while (props.currentlyAnimating) {
-				console.log("test " + toFail.length)
-				await delay(1000);
-			}	
-		})()
-	}, [props.currentlyAnimating])
-
-function delay(milliseconds : number){
-    return new Promise(resolve => {
-        setTimeout(resolve, milliseconds);
-    });
-}
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
             event.preventDefault()
@@ -110,13 +169,8 @@ function delay(milliseconds : number){
                 id: getId(),
                 type,
                 position,
-                data: {label: `${alphabet[id % alphabet.length]}`},
+                data: {label: `${alphabet[id % alphabet.length]}`, failed: null},
             } as EventNodeType
-
-            if (type === NodeType.EVENT_NODE) {
-                newNode.data = {...newNode.data, failed: null}
-                console.log(newNode)
-            }
 
             setNodes((nds) => nds.concat(newNode))
         },
