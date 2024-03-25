@@ -57,7 +57,7 @@ function explore_binary_nodes(current_node: Node, all_nodes: Node[], all_edges: 
             }
             break;
         case "fdep":
-            return [false, []];
+            return [false, resEdges];
         default:
             throw new Error("Exploring node of unknown type");
     }
