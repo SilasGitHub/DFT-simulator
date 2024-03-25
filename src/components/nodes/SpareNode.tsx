@@ -7,7 +7,7 @@ export default function SpareNode({id, data}: NodeProps<SpareNodeData>) {
     const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
 
     // dynamically create more handles
-    const connectedSources = useDynamicHandles(id, "spare_")
+    const connectedSources = useDynamicHandles(id, "spare-")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
 

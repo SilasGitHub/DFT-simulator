@@ -8,7 +8,7 @@ export default function FDEPNode({id, data}: NodeProps<FdepNodeData>) {
     const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
 
     // dynamically create more handles
-    const connectedSources = useDynamicHandles(id, "dependent_")
+    const connectedSources = useDynamicHandles(id, "dependent-")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
 
