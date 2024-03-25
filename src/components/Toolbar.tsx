@@ -4,6 +4,8 @@ import {NodeType} from "./nodes/Nodes.ts"
 interface ToolbarProps {
     selected : Array<string>,
 	setSelected :  React.Dispatch<React.SetStateAction<string[]>>
+	currentlyAnimating : boolean,
+	setCurrentlyAnimating : React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
@@ -15,6 +17,7 @@ export default function Toolbar(props : ToolbarProps) {
         event.dataTransfer.setData('application/reactflow', nodeType);
         event.dataTransfer.effectAllowed = 'move';
       };
+	
 
 	// get mouse coordenates
     useEffect(() => {
@@ -92,13 +95,24 @@ export default function Toolbar(props : ToolbarProps) {
 		l[end] = temp;
 
 		return l;
-	  };
+	  };	  
+
+	function startAnimation() {
+		props.setCurrentlyAnimating(true);
+	}
+
+	function stopAnimation() {
+		props.setCurrentlyAnimating(false);
+	}
 
 	return (
 	<div className='toolbarWrapper'>
 		<div>
 			Drag & drop nodes
-			<aside className="node-drag">
+			<aside className="node-drag"> 
+				<div className="dndnode" onDragStart={(event) => onDragStart(event, 'eventNode')} draggable>
+					Basic Event
+				</div>
 				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
 					Fail Event
 				</div>
@@ -163,6 +177,10 @@ export default function Toolbar(props : ToolbarProps) {
 				))}
 				</ol>
 			</aside>
+		</div>
+		<div>
+			<button hidden={props.currentlyAnimating} onClick={() => startAnimation()}>Start animation</button>
+			<button hidden={!props.currentlyAnimating} onClick={() => stopAnimation()}>Stop animation</button>
 		</div>
 	</div>
 	);
