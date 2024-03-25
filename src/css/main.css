@@ -8,19 +8,31 @@ h1 {
 	color: #8873be;
 } */
 
-.gate {
+.entity {
 	background: white;
-	border: 1px solid black;
+	border: 2px solid black;
 	text-align: center;
 	justify-content: center;
 	display: flex;
-	text-align: center;
+	border-radius: 10px;
+	overflow: hidden;
 }
 
 .dot {
+	padding: 5px;
 	height: 50px;
 	width: 50px;
 	border-radius: 50%;
+}
+
+.dot-autoscale {
+	padding: 5px;
+	min-width: 50px;
+	border-radius: 50%;
+	aspect-ratio: 1/1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .or {
@@ -48,11 +60,9 @@ h1 {
 }
 
 .arrow-right {
-	width: 0; 
-	height: 0; 
-	border-top: 10px solid transparent;
-	border-bottom: 10px solid transparent;
-	border-left: 30px solid black;
+	border-top: 20px solid transparent;
+	border-bottom: 20px solid transparent;
+	border-left: 40px solid black;
   }
 
 .dndnode {
@@ -74,28 +84,19 @@ h1 {
 	height: 100%;
   }
 
-.handles {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-around;
-	width: 10px;
-	height: 100%;
-	position: absolute;
-}
-
 .list {
 	display: flex;
 	flex-direction: column;
-  
+
 	justify-content: center;
 	text-align: center;
-  
+
 	border: 1px black solid;
-  
+
 	width :auto;
 	margin: 10px 0px;
   }
-  
+
 .list-item {
 	padding: 0.3rem;
 	white-space: nowrap;
@@ -115,7 +116,7 @@ h1 {
 	position: absolute;
 	box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
   }
-  
+
 .list-item.drop-zone {
 	background-color: #ccc;
 	transition-property: height padding;
@@ -123,9 +124,18 @@ h1 {
 	transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
 	overflow: hidden;
   }
-  
+
 .list-item.drop-zone.hidden {
 	height: 0px;
 	padding: 0px
   }
-  
+
+
+/*reactflow overwrites*/
+path.react-flow__edge-path {
+	stroke-width: 2;
+}
+
+path.react-flow__edge-path:hover {
+	stroke-width: 4;
+}

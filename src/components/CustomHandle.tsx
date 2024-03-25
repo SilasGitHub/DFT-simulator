@@ -32,7 +32,7 @@ export default function CustomHandle(props: CustomHandleProps) {
     }, [props.isConnectable, props.id, nodeInternals, nodeId, edges])
 
     return (
-        <Handle {...props as HandleProps} isConnectable={isHandleConnectable} style={{minWidth: '10px', minHeight: '10px'}} ></Handle>
+        <Handle {...props as HandleProps} isConnectable={isHandleConnectable} style={{...props.style, minWidth: '10px', minHeight: '10px'}} ></Handle>
     )
 }
 

@@ -2,19 +2,51 @@ import {NodeProps, Position} from "reactflow"
 import AndSvg from "./../../img/and.svg"
 import CustomHandle from "../CustomHandle"
 import {AndNodeData} from "./Nodes"
+import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
 
-export default function AndNode({data}: NodeProps<AndNodeData>) {
+export default function AndNode({id, data}: NodeProps<AndNodeData>) {
 	const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
+
+    // dynamically create more handles
+    const connectedSources = useDynamicHandles(id);
+    const nHandles = Math.max(connectedSources.length + 1, 2);
+    const spacing = 100 / (nHandles + 1);
+
     return (
         <>
             {/* <NodeResizer isVisible={selected} minWidth={60} minHeight={100} keepAspectRatio={true} /> */}
-            <CustomHandle type="target" position={Position.Bottom} id="a" style={{right: "20%", left: "auto"}} isConnectable={1}/>
-            <CustomHandle type="target" position={Position.Bottom} id="b" style={{left: "20%"}} isConnectable={1}/>
-            <CustomHandle type="source" position={Position.Top} id="c" isConnectable={true}/>
-            <div className="gate and">
-                <img className="gate-img" style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}}
-                     src={AndSvg}/>
+            <CustomHandle type="source" position={Position.Top} id="c" isConnectable={true} className="handle"/>
+            <CustomHandle
+                type="target"
+                position={Position.Bottom}
+                id="a"
+                style={{ left: spacing + "%" }}
+                isConnectable={1}
+            />
+            <CustomHandle
+                type="target"
+                position={Position.Bottom}
+                id="b"
+                style={{ left: spacing * 2 + "%" }}
+                isConnectable={1}
+            />
+            {connectedSources.slice(1).map((edge, i) => (
+                <CustomHandle
+                    type="target"
+                    position={Position.Bottom}
+                    id={edge.id + edge.targetHandle}
+                    key={edge.id + edge.targetHandle}
+                    style={{ left: spacing * (i + 3) + "%" }}
+                    isConnectable={1}
+                />
+            ))}
+            <div className="entity and">
+                <img
+                    className="gate-img"
+                    style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}}
+                    src={AndSvg}
+                />
             </div>
         </>
     )

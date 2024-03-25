@@ -1,17 +1,43 @@
 import {NodeProps, Position} from "reactflow"
-import SvgXOr from './../../img/xor.svg';
-import CustomHandle from '../CustomHandle';
+import SvgXOr from "./../../img/xor.svg"
+import CustomHandle from "../CustomHandle"
 import {XorNodeData} from "./Nodes"
+import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 
-export default function XOrNode(_: NodeProps<XorNodeData>) {
+export default function XOrNode({id}: NodeProps<XorNodeData>) {
+    // dynamically create more handles
+    const connectedSources = useDynamicHandles(id)
+    const nHandles = Math.max(connectedSources.length + 1, 2)
+    const spacing = 100 / (nHandles + 1)
+
     return (
-        <div className='gate or'>
-            {/* <p>{data.label}</p> */}
-            {/* <NodeResizer isVisible={selected} minWidth={60} minHeight={100} keepAspectRatio={true} /> */}
-            <CustomHandle type="target" position={Position.Bottom} style={{left: "20%"}} id='b' isConnectable={1} />
-            <CustomHandle type="target" position={Position.Bottom} style={{right: "20%", left: 'auto'}} id='a' isConnectable={1} />
-            <CustomHandle type="source" position={Position.Top} id='c' isConnectable={true} />
-            <img className='gate-img' style={{transformOrigin: 'center', transform: 'rotate(-90deg)'}} src={SvgXOr}/>
+        <div className="entity or">
+            <CustomHandle type="source" position={Position.Top} id="c" isConnectable={true}/>
+            <CustomHandle
+                type="target"
+                position={Position.Bottom}
+                style={{ left: spacing + "%" }}
+                id="b"
+                isConnectable={1}
+            />
+            <CustomHandle
+                type="target"
+                position={Position.Bottom}
+                style={{ left: spacing * 2 + "%" }}
+                id="a"
+                isConnectable={1}
+            />
+            {connectedSources.slice(1).map((edge, i) => (
+                <CustomHandle
+                    type="target"
+                    position={Position.Bottom}
+                    id={edge.id + edge.targetHandle}
+                    key={edge.id + edge.targetHandle}
+                    style={{ left: spacing * (i + 3) + "%" }}
+                    isConnectable={1}
+                />
+            ))}
+            <img className="gate-img" style={{transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgXOr}/>
         </div>
-      );
+    )
 }
