@@ -44,13 +44,13 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
-	const [disabled, setDisabled] = React.useState(false);
-    let toFail = new Array<string>();
+	  const [disabled, setDisabled] = React.useState(false);
+  
+	  let toFail = new Array<string>();
 
     React.useCallback(() => {
         console.log(getConnectedEdges(nodes, edges))
     }, [nodes])
-
     const onConnect = React.useCallback((connection: Connection) => {
         setEdges((eds) => addEdge(connection, eds))
     }, [])
@@ -219,10 +219,9 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 			}))
 			return;
 		}
-
-        if (running) {
-            doAnimate();
-        }
+    if (running) {
+        doAnimate();
+    }
     }, [props.currentlyAnimating]);
 
 
@@ -290,6 +289,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                     nd.data = {
                         ...nd.data,
                         failed: nd.data.failed === null ? 1 : null,
+                        failed: nd.data.failed === null ? true : null,
                     }
                 }
                 return nd
