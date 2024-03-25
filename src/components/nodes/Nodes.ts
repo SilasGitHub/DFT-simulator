@@ -10,11 +10,14 @@ import SpareNode from "./SpareNode.tsx"
 
 export type CommonNodeData = {
     label: string;
-    failed: null | boolean;
+    failed: null | number;
 }
 
 export type SystemNodeData = CommonNodeData
-export type EventNodeData = CommonNodeData
+export type EventNodeData = {
+    isSpare: boolean;
+	beingUsedBy: string;
+} & CommonNodeData
 
 export type AndNodeData = CommonNodeData
 export type OrNodeData = CommonNodeData

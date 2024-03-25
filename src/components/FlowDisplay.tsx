@@ -1,11 +1,14 @@
-import React from "react"
+import React, { useEffect } from "react"
 import ReactFlow, {
     addEdge,
     Background,
     BackgroundVariant,
     Connection,
     Controls,
+    Edge,
     getConnectedEdges,
+    getIncomers,
+    getOutgoers,
     MiniMap,
     Node,
     ReactFlowInstance,
@@ -24,6 +27,7 @@ const initialNodes: NodeUnion[] = [
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
+let order = 1;
 let id = 0
 const getId = () => `dndnode_${id++}`
 
@@ -33,11 +37,15 @@ interface FlowDisplayProps {
 	currentlyAnimating: boolean,
 }
 
+let running = false;
+
 export default function FlowDisplay(props: FlowDisplayProps) {
     const reactFlowWrapper = React.useRef(null)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
+	const [disabled, setDisabled] = React.useState(false);
+    let toFail = new Array<string>();
 
     React.useCallback(() => {
         console.log(getConnectedEdges(nodes, edges))
@@ -51,6 +59,172 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         event.preventDefault()
         event.dataTransfer.dropEffect = "move"
     }, [])
+
+	function resetAnimation() {
+		setNodes(nodes.map(node => {
+			if ((node as NodeUnion).type === NodeType.EVENT_NODE && node.data.isSpare) {
+				node.data.failed = null;
+				node.data.beingUsedBy = null;
+			} else {
+				node.data.failed = 0;
+			}
+			return node;
+		}))
+	}
+
+	function getOutgoingNodesAndEdges(node : Node) : [edges : Edge[], nodes: Node[]] {
+		const outgoingNodes = getOutgoers(node, nodes, edges);
+		const outgoingEdges = edges.filter(edge => (edge.sourceNode === node || edge.targetNode === node) && 
+			(outgoingNodes.includes(edge.targetNode as Node) || outgoingNodes.includes(edge.sourceNode as Node)));
+		return [outgoingEdges, outgoingNodes]
+	}
+
+	function getChildren(node : Node) : Node[] {
+		return getIncomers(node, nodes, edges);
+	}
+
+	function getIncomingEdges(node : Node) : Edge[] {
+		return edges.filter(edge => edge.target === node.id);
+	}
+	
+	const doAnimate : any =() => {
+        if (!running) {
+            console.log("not running anymore")
+			toFail = [];
+            return;
+        }
+
+		if (toFail.length === 0) {
+			toFail = [...props.selected];
+			resetAnimation();
+		} else {
+			const nodeName = toFail.shift();
+			const node = nodes.find(node => node.id === nodeName) as NodeUnion;
+			let nextState : number;
+			switch (node.type) {
+				case (NodeType.SYSTEM_NODE) : {
+					const children = getChildren(node);
+					nextState = children.some(child => child.data.failed) ? order++ : 0;
+					break;
+				}
+				case (NodeType.EVENT_NODE) : {
+					nextState = order++;
+					break;
+				}
+				case (NodeType.AND_NODE) : {
+					const children = getChildren(node);
+					nextState = children.every(child => child.data.failed) ? order++ : 0;
+					break;
+				}
+				case (NodeType.OR_NODE) : {
+					const children = getChildren(node);
+					nextState = children.some(child => child.data.failed) ? order++ : 0;
+					break;
+				}
+				case (NodeType.XOR_NODE) : {
+					const children = getChildren(node);
+					const failedChildIndex = children.findIndex(child => child.data.failed);
+					children.splice(failedChildIndex, 1);
+					nextState = (failedChildIndex >= 0 && children.findIndex(child => child.data.failed) === -1) ? order++ : 0;
+					break;
+				}
+				case (NodeType.PAND_NODE) : {
+					const children = getChildren(node);
+					const failedList = children.map(child => {return child.data.failed})
+					nextState = failedList.every(function (x, i) { return x > 0 && (i === 0 || x >= failedList[i - 1]); }) ? order++ : 0;
+					break;
+				}
+				case (NodeType.SPARE_NODE) : {
+					const incomingEdges = getIncomingEdges(node);
+					const primaryNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("primary"))?.source
+					const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as Node;
+					const spareNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("spare")).map(edge => edge.source);
+					const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as Node);
+					const currentSpare = spareNodes.find(spare => spare.data.beingUsedBy === node.id && spare.data.failed === 0);
+					if (primaryNode.data.failed) {
+						if (!currentSpare) {
+							const inactiveSpare = spareNodes.find(node => node.data.failed === null);
+							if (inactiveSpare) {
+								inactiveSpare.data.beingUsedBy = node.id;
+								inactiveSpare.data.failed = 0;
+								setNodes(nodes.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd));
+								return setTimeout(() => { doAnimate(); }, 1000) ;
+							} else {
+								nextState = order++;
+								break;
+							}
+						} else {
+							nextState = 0;
+							break;
+						}
+					} else {
+						if (currentSpare) {
+							currentSpare.data.beingUsedBy === null;
+							currentSpare.data.failed = null;
+							setNodes(nodes.map(nd => nd.id === currentSpare.id ? currentSpare : nd));
+							return setTimeout(() => { doAnimate(); }, 1000) ;
+						}
+						nextState = 0; 
+						break;
+					}
+				}
+				case (NodeType.FDEP_NODE) : {
+					const incomingEdges = getIncomingEdges(node);
+					const triggerNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("trigger"))?.source
+					const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as Node;
+					const dependentNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("dependent")).map(edge => edge.source);
+					const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as Node);
+					nextState = triggerNode.data.failed ? order++ : 0;
+					if (triggerNode.data.failed) {
+						if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+							return doAnimate();
+						}
+						setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
+						const dependentNodesToFail = dependentNodes.filter(node => !node.data.failed);
+						if (dependentNodesToFail.length > 0) {
+							toFail = dependentNodesToFail.map(node => node.id).concat(toFail);
+							return setTimeout(() => { doAnimate(); }, 1000) ;
+						}
+						return;
+					}
+					break;
+				}
+				default : {
+					return;
+				}
+			}
+			if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+				return doAnimate();
+			}
+			setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
+			const [outgoingEdges, outgoingNodes] = getOutgoingNodesAndEdges(node);
+			toFail = outgoingNodes.map(node => node.id).concat(toFail);
+		}
+        console.log("Running:" + running)
+        setTimeout(() => {
+            doAnimate();
+        }, 1000) 
+
+    }
+
+    useEffect(() => {
+		running = props.currentlyAnimating;
+
+		//Disable/enable interaction with the FlowDisplay
+		setDisabled(running);
+		if (!running) {
+			setNodes(nodes.map(node => {
+				node.data.failed = props.selected.includes(node.id) ? 1 : null; 
+				return node;
+			}))
+			return;
+		}
+
+        if (running) {
+            doAnimate();
+        }
+    }, [props.currentlyAnimating]);
+
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
             event.preventDefault()
@@ -75,13 +249,8 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 id: getId(),
                 type,
                 position,
-                data: {label: `${alphabet[id % alphabet.length]}`},
+                data: {label: `${alphabet[id % alphabet.length]}`, failed: null},
             } as EventNodeType
-
-            if (type === NodeType.EVENT_NODE) {
-                newNode.data = {...newNode.data, failed: null}
-                console.log(newNode)
-            }
 
             setNodes((nds) => nds.concat(newNode))
         },
@@ -89,6 +258,14 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     )
 
     const onConnectWrap = (connection: Connection) => {
+		const sourceNode = nodes.find(node => node.id === connection.source) as Node;
+		if (connection.targetHandle?.includes("spare") && sourceNode.type === NodeType.EVENT_NODE) {
+			sourceNode.data.isSpare = true;
+			setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+		} else if(!connection.targetHandle?.includes("dependent") && sourceNode.type === NodeType.EVENT_NODE) {
+			sourceNode.data.isSpare = false;
+			setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+		}
         onConnect(connection)
         // doUpdateFail(Date.now())
     }
@@ -112,7 +289,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 if (nd.id === node.id) {
                     nd.data = {
                         ...nd.data,
-                        failed: nd.data.failed === null ? null : !nd.data.failed,
+                        failed: nd.data.failed === null ? 1 : null,
                     }
                 }
                 return nd
@@ -124,7 +301,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     return (
         <ReactFlowProvider>
             <div className="reactflow-wrapper" ref={reactFlowWrapper}>
-                <ReactFlow
+			<ReactFlow
                     nodes={nodes}
                     edges={edges}
                     nodeTypes={nodeMap}
@@ -135,6 +312,12 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnectWrap}
                     onNodeClick={onNodeClick}
+                    edgesUpdatable={!disabled}
+                    edgesFocusable={!disabled}
+                    nodesDraggable={!disabled}
+                    nodesConnectable={!disabled}
+                    nodesFocusable={!disabled}
+                    elementsSelectable={!disabled}
                 >
                     <Controls/>
                     <MiniMap/>
