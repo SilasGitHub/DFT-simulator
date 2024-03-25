@@ -1,9 +1,8 @@
 import {Edge, getIncomers, getOutgoers, Node} from "reactflow"
-import {NodeUnion} from "../components/nodes/Nodes.ts"
 import React from "react"
 
 export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
-    const getNodeById = React.useCallback(<T extends NodeUnion>(id: string | null | undefined): T | null => {
+    const getNodeById = React.useCallback(<T extends Node>(id: string | null | undefined): T | null => {
         if (!id) {
             return null
         }
@@ -13,8 +12,8 @@ export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
     const getOutgoingNodesAndEdges = React.useCallback((node: Node) => {
         const outgoingNodes = getOutgoers(node, nodes, edges)
         const outgoingEdges = edges.filter(edge =>
-            (edge.sourceNode === node || edge.targetNode === node)
-            && (outgoingNodes.includes(edge.targetNode as Node) || outgoingNodes.includes(edge.sourceNode as Node)),
+            (edge.source === node.id || edge.target === node.id)
+            && (outgoingNodes.map(n => n.id).includes(edge.target) || outgoingNodes.map(n => n.id).includes(edge.source)),
         )
         return {
             outgoingEdges,
