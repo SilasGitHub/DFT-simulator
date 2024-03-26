@@ -1,10 +1,11 @@
-import React, {useEffect} from "react"
+import React, {useCallback, useEffect} from "react"
 import ReactFlow, {
     addEdge,
     Background,
     BackgroundVariant,
     Connection,
     Controls,
+    Edge,
     getConnectedEdges,
     MiniMap,
     Node,
@@ -20,7 +21,7 @@ import {parseHandleId} from "../utils/idParser.ts"
 const initialNodes: NodeUnion[] = [
     // { id: '2', data: { label: 'A' }, position: { x: 100, y: 200 }, type: 'eventNode' },
     // { id: '1', data: { label: 'B' }, position: { x: 100, y: 200 }, type: 'orNode' },
-    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 100, y: 200}, type: NodeType.SYSTEM_NODE},
+    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 800, y: 450}, selectable: false, type: NodeType.SYSTEM_NODE},
 ]
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -67,6 +68,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             } else {
                 node.data.failed = 0
             }
+			node.selected = false;
             return node
         }))
     }, [nodes, setNodes])
@@ -232,9 +234,10 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 type,
                 position,
                 data: {label: `${alphabet[id % alphabet.length]}`, failed: null},
+				selected: true,
             } as EventNodeType
 
-            setNodes((nds) => nds.concat(newNode))
+            setNodes((nds) => nds.map(nd => { nd.selected = false; return nd; }).concat(newNode))
         },
         [reactFlowInstance],
     )
@@ -254,7 +257,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     }
 
     const onNodeClick = (_: React.MouseEvent, node: Node) => {
-        if (node.type !== NodeType.EVENT_NODE) {
+        if (props.currentlyAnimating || node.type !== NodeType.EVENT_NODE) {
             return
         }
 
@@ -281,6 +284,17 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 
     }
 
+	const onEdgesDelete = (deleted : Edge[]) => {
+		props.setSelected(props.selected.filter(id => !deleted.map(edge => edge.id).includes(id)));
+	}
+
+	const onNodesDelete = (deleted : Node[]) => {
+		// let connectedEdges = new Array<Edge>();
+		// deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
+		// const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
+		props.setSelected(props.selected.filter(id => !deleted.map(node => node.id).includes(id)));
+		};
+
     return (
         <div className="reactflow-wrapper" ref={reactFlowWrapper}>
             <ReactFlow
@@ -291,7 +305,9 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}
                 onNodesChange={onNodesChange}
+				onNodesDelete={onNodesDelete}
                 onEdgesChange={onEdgesChange}
+				onEdgesDelete={onEdgesDelete}
                 onConnect={onConnectWrap}
                 onNodeClick={onNodeClick}
                 edgesUpdatable={!disabled}
