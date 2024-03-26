@@ -11,7 +11,9 @@ export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
     }, [nodes])
 
     const getOutgoingNodesAndEdges = React.useCallback((node: Node) => {
-        const outgoingNodes = getOutgoers(node, nodes, edges)
+        const outgoingNodes = getOutgoers(node, nodes, edges).sort((a, b) => {
+			return a.position.x - b.position.x;
+		})
         const outgoingEdges = edges.filter(edge =>
             (edge.source === node.id || edge.target === node.id)
             && (outgoingNodes.map(n => n.id).includes(edge.target) || outgoingNodes.map(n => n.id).includes(edge.source)),
@@ -23,7 +25,9 @@ export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
     }, [nodes, edges])
 
     const getIncomingEdges = React.useCallback((node: Node): Edge[] => {
-        return edges.filter(edge => edge.target === node.id)
+        return edges.filter(edge => edge.target === node.id).sort((a, b) => {
+			return (parseHandleId(a.targetHandle).number as number) - (parseHandleId(b.targetHandle).number as number);
+		})
     }, [edges])
 
     const getChildren = React.useCallback((node: Node): Node[] => {
