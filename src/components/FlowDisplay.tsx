@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from "react"
+import React, {useEffect} from "react"
 import ReactFlow, {
     addEdge,
     Background,
@@ -6,7 +6,6 @@ import ReactFlow, {
     Connection,
     Controls,
     Edge,
-    getConnectedEdges,
     MiniMap,
     Node,
     ReactFlowInstance,
@@ -16,10 +15,12 @@ import ReactFlow, {
 import "reactflow/dist/style.css"
 import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
-import {parseHandleId} from "../utils/idParser.ts"
+import {createNodeId, parseHandleId} from "../utils/idParser.ts"
+
+const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
 
 const initialNodes: NodeUnion[] = [
-    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 800, y: 450}, selectable: false, type: NodeType.SYSTEM_NODE},
+    {id: createNodeId(NodeType.SYSTEM_NODE, "SYS"), data: {failed: null, label: "SYS"}, position: {x: screenCenter.x - 25, y: screenCenter.y - 25}, selectable: false, type: NodeType.SYSTEM_NODE},
 ]
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
