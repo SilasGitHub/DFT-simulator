@@ -296,7 +296,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 		};
 
     return (
-        <div className="reactflow-wrapper" ref={reactFlowWrapper}>
+        <div id="flowdisplay" ref={reactFlowWrapper}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}

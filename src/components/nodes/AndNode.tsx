@@ -51,7 +51,7 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
             <div className="entity and">
                 <img
                     className="gate-img"
-                    style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}}
+                    style={{backgroundColor: color}}
                     src={AndSvg}
                 />
             </div>

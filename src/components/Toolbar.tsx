@@ -17,7 +17,7 @@ export default function Toolbar(props : ToolbarProps) {
         event.dataTransfer.setData('application/reactflow', nodeType);
         event.dataTransfer.effectAllowed = 'move';
       };
-	
+
 
 	// get mouse coordenates
     useEffect(() => {
@@ -95,7 +95,7 @@ export default function Toolbar(props : ToolbarProps) {
 		l[end] = temp;
 
 		return l;
-	  };	  
+	  };
 
 	function startAnimation() {
 		props.setCurrentlyAnimating(true);
@@ -106,10 +106,10 @@ export default function Toolbar(props : ToolbarProps) {
 	}
 
 	return (
-	<div className='toolbarWrapper'>
+	<div className="">
 		<div>
 			Drag & drop nodes
-			<aside className="node-drag"> 
+			<aside className="node-drag">
 				<div className="dndnode" onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
 					Basic Event
 				</div>

@@ -47,7 +47,7 @@ export default function PAndNode({id, data}: NodeProps<PAndNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className='gate-img' style={{backgroundColor: color, transformOrigin: 'center', transform: 'rotate(-90deg)'}} src={PAndSvg}/>
+            <img className='gate-img' style={{backgroundColor: color}} src={PAndSvg}/>
         </div>
       );
 }

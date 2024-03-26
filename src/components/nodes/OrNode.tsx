@@ -47,7 +47,7 @@ export default function OrNode({id, data}: NodeProps<OrNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className="gate-img" style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgOr}/>
+            <img className="gate-img" style={{backgroundColor: color}} src={SvgOr}/>
         </div>
     )
 }

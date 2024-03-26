@@ -1,0 +1,68 @@
+.entity {
+	text-align: center;
+	justify-content: center;
+	display: flex;
+	overflow: hidden;
+	height: 100%;
+}
+
+.gate-img {
+	object-fit: contain;
+	height: 120%;
+	position: relative;
+}
+
+#flowdisplay {
+	.entity {
+		border: 2px solid black;
+		background: white;
+		border-radius: 10px;
+
+		.gate-img {
+			padding: 5px 30px;
+		}
+	}
+}
+
+.dot {
+	padding: 5px;
+	height: 50px;
+	width: 50px;
+	border-radius: 50%;
+}
+
+.dot-autoscale {
+	padding: 5px;
+	min-width: 50px;
+	border-radius: 50%;
+	aspect-ratio: 1/1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.or {
+	min-height: 100px;
+	min-width: 60px;
+	height: 100%;
+}
+
+.spare {
+	height:100px;
+	width: 160px;
+	/* height: 100%; */
+	justify-content: space-between;
+	flex-direction: column;
+}
+
+
+.arrow-right {
+	border-top: 20px solid transparent;
+	border-bottom: 20px solid transparent;
+	border-left: 40px solid black;
+}
+
+.dndnode {
+	width: 100%;
+	border: 1px solid black;
+}

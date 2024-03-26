@@ -45,7 +45,7 @@ export default function XOrNode({id, data}: NodeProps<XorNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <img className="gate-img" style={{backgroundColor: color, transformOrigin: "center", transform: "rotate(-90deg)"}} src={SvgXOr}/>
+            <img className="gate-img" style={{backgroundColor: color}} src={SvgXOr}/>
         </div>
     )
 }
