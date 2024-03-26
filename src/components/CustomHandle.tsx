@@ -69,6 +69,9 @@ export default function CustomHandle({isConnectable, ...rest}: CustomHandleProps
         }
         const restrictedTypes = nodeTypeRestrictions[handleType]
         // we cannot retrieve the target handle, so must get the allowed node types from somewhere else:
+        if (!restrictedTypes) {
+            return true
+        }
         return restrictedTypes.includes(sourceNode.type as NodeType)
     }, [getNodeById, getOutgoingNodesAndEdges])
 
