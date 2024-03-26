@@ -11,6 +11,9 @@ import SpareNode from "./SpareNode.tsx"
 export type CommonNodeData = {
     label: string;
     failed: null | number;
+    /**
+     * Which types of nodes should be able to connect to this handle
+     */
 }
 
 export type SystemNodeData = CommonNodeData
@@ -28,16 +31,16 @@ export type PAndNodeData = CommonNodeData
 export type SpareNodeData = CommonNodeData
 
 export enum NodeType {
-    SYSTEM_NODE = "systemNode",
-    EVENT_NODE = "eventNode",
+    SYSTEM_NODE = "SYSTEM_NODE",
+    EVENT_NODE = "EVENT_NODE",
 
-    AND_NODE = "andNode",
-    OR_NODE = "orNode",
-    XOR_NODE = "xorNode",
+    AND_NODE = "AND_NODE",
+    OR_NODE = "OR_NODE",
+    XOR_NODE = "XOR_NODE",
 
-    FDEP_NODE = "fdepNode",
-    PAND_NODE = "pandNode",
-    SPARE_NODE = "spareNode",
+    FDEP_NODE = "FDEP_NODE",
+    PAND_NODE = "PAND_NODE",
+    SPARE_NODE = "SPARE_NODE",
 }
 
 export interface SystemNodeType extends Node<SystemNodeData> {
@@ -80,7 +83,28 @@ export type NodeUnion = SystemEventNodeUnion | GateNodeUnion;
 export type SystemEventNodeUnion = SystemNodeType | EventNodeType | UnknownNodeType;
 export type GateNodeUnion = AndNodeType | OrNodeType | XorNodeType | PAndNodeType | FdepNodeType | SpareNodeType | UnknownNodeType;
 
-export const nodeMap = {
+/**
+ * A map with the node type as key and the allowed handle connection types as value.
+ * The key is part of the handle id. use {@link parseHandleId} to get the handle type.
+ */
+export const handleRestrictionsMap: {[key: string]: {[key: string]: NodeType[]} | undefined} = {
+    [NodeType.SYSTEM_NODE]: undefined,
+    [NodeType.EVENT_NODE]: undefined,
+
+    [NodeType.AND_NODE]: undefined,
+    [NodeType.OR_NODE]: undefined,
+    [NodeType.XOR_NODE]: undefined,
+
+    [NodeType.FDEP_NODE]: {
+        "dependent": [NodeType.EVENT_NODE]
+    },
+    [NodeType.PAND_NODE]: undefined,
+    [NodeType.SPARE_NODE]: {
+        "spare": [NodeType.EVENT_NODE]
+    },
+}
+
+export const nodeElementsMap = {
     [NodeType.SYSTEM_NODE]: SystemNode,
     [NodeType.EVENT_NODE]: EventNode,
 

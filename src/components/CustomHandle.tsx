@@ -10,21 +10,19 @@ import {
     useStore,
 } from "reactflow"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
+import {parseHandleId} from "../utils/idParser.ts"
+import {handleRestrictionsMap, NodeType} from "./nodes/Nodes.ts"
 
 // Taken from: https://reactflow.dev/examples/nodes/connection-limit
 
 const selector = (state: ReactFlowState) => (state)
 
 type CustomHandleProps = {
-    isConnectable: boolean | number,
-    /**
-     * Which types of nodes should be able to connect to this handle
-     */
-    // allowedNodeConnectionTypes?: NodeType[],
+    isConnectable: boolean | number
 } & Omit<HandleProps & Omit<HTMLAttributes<HTMLDivElement>, "id">, "isConnectable">
 
 export default function CustomHandle({isConnectable, ...rest}: CustomHandleProps) {
-    const {nodeInternals, edges, ...state} = useStore(selector)
+    const {edges} = useStore(selector)
     const {getNodeById, getOutgoingNodesAndEdges} = useNodeUtils(useNodes(), edges)
     const nodeId = useNodeId()
 
@@ -42,15 +40,16 @@ export default function CustomHandle({isConnectable, ...rest}: CustomHandleProps
         }
 
         return isConnectable
-    }, [isConnectable, rest.id, nodeInternals, nodeId, edges])
+    }, [isConnectable, rest.id, nodeId, edges])
 
     /**
      * This valid connection runs on the source handle
+     *
+     * This validation in run on the side that started the connection, so if we drag from
+     * EventNode to FdepNode, EventNode will check validity: we need a global store for which nodes can connect to which
+     * Yet, source and target handle values here are always consistent: as defined by the handle type
      */
     const isValidConnection = React.useCallback((connection: Connection) => {
-        if (rest.id === 'dependent-1') {
-            console.log(rest)
-        }
         // allow connecting self only once
         const sourceNode = getNodeById(connection.source)!
         const targetNode = getNodeById(connection.target)!
@@ -62,13 +61,16 @@ export default function CustomHandle({isConnectable, ...rest}: CustomHandleProps
             return false
         }
 
-        // // allow connecting only to compatible types
-        // if (!allowedNodeConnectionTypes) {
-        //     return true
-        // }
-        // return allowedNodeConnectionTypes.includes(targetNode.type as NodeType)
-        return true
-    }, [getNodeById, getOutgoingNodesAndEdges, state])
+        // allow connecting only to compatible types
+        const {nodeType, handleType} = parseHandleId(connection.targetHandle)
+        const nodeTypeRestrictions = handleRestrictionsMap[nodeType]
+        if (!nodeTypeRestrictions) {
+            return true
+        }
+        const restrictedTypes = nodeTypeRestrictions[handleType]
+        // we cannot retrieve the target handle, so must get the allowed node types from somewhere else:
+        return restrictedTypes.includes(sourceNode.type as NodeType)
+    }, [getNodeById, getOutgoingNodesAndEdges])
 
     return (
         <Handle
