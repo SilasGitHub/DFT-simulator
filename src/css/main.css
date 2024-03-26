@@ -141,10 +141,10 @@ path.react-flow__edge-path:hover {
 }
 
 /*highlight handles on hover*/
-.react-flow__handle.connectingto {
+.react-flow__handle-connecting {
 	background: #ff6060;
 }
 
-.react-flow__handle.connectingto.valid {
+.react-flow__handle-connecting.valid {
 	background: #55dd99;
 }
