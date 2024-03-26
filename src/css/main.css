@@ -143,7 +143,7 @@ path.react-flow__edge-path:hover {
 /*hightlight node when slected*/
 .react-flow__node.selected {
     background: rgba(0, 89, 220, 0.08);
-    border: 4px dotted rgba(0, 89, 220, 0.8);
+    outline: 4px dotted rgba(0, 89, 220, 0.8) !important;
 }
 
 /*highlight handles on hover*/
