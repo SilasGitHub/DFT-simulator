@@ -1,5 +1,6 @@
 import {Edge, getIncomers, getOutgoers, Node} from "reactflow"
 import React from "react"
+import { parseHandleId } from "./idParser"
 
 export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
     const getNodeById = React.useCallback(<T extends Node>(id: string | null | undefined): T | null => {
@@ -26,7 +27,13 @@ export const useNodeUtils = (nodes: Node[], edges: Edge[]) => {
     }, [edges])
 
     const getChildren = React.useCallback((node: Node): Node[] => {
-        return getIncomers(node, nodes, edges)
+        const incomers = getIncomers(node, nodes, edges)
+		incomers.sort((a, b) => {
+			const edgeA = edges.find(edge => edge.target === node.id && edge.source === a.id) as Edge;
+			const edgeB = edges.find(edge => edge.target === node.id && edge.source === b.id) as Edge; 
+			return (parseHandleId(edgeA.targetHandle).number as number) - (parseHandleId(edgeB.targetHandle).number as number);
+		})
+		return incomers;
     }, [nodes, edges])
 
     return {
