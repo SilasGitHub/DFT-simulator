@@ -140,7 +140,17 @@ path.react-flow__edge-path:hover {
 	stroke-width: 4;
 }
 
-.react-flow__node.selected {  
-	background: rgba(0, 89, 220, 0.08);
-	border: 4px dotted rgba(0, 89, 220, 0.8);
+/*hightlight node when slected*/
+.react-flow__node.selected {
+    background: rgba(0, 89, 220, 0.08);
+    outline: 4px dotted rgba(0, 89, 220, 0.8) !important;
+}
+
+/*highlight handles on hover*/
+.react-flow__handle-connecting {
+	background: #ff6060;
+}
+
+.react-flow__handle-connecting.valid {
+	background: #55dd99;
 }

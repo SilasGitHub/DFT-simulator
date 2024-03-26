@@ -1,8 +1,9 @@
 import {NodeProps, Position} from "reactflow"
 import AndSvg from "./../../img/and.svg"
 import CustomHandle from "../CustomHandle"
-import {AndNodeData} from "./Nodes"
+import {AndNodeData, NodeType} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
+import {createHandleId} from "../../utils/idParser.ts"
 
 
 export default function AndNode({id, data}: NodeProps<AndNodeData>) {
@@ -16,18 +17,24 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
     return (
         <>
             {/* <NodeResizer isVisible={selected} minWidth={60} minHeight={100} keepAspectRatio={true} /> */}
-            <CustomHandle type="source" position={Position.Top} id="c" isConnectable={true} className="handle"/>
+            <CustomHandle
+                type="source"
+                position={Position.Top}
+                id={createHandleId(NodeType.AND_NODE, "output")}
+                isConnectable={true}
+                className="handle"
+            />
             <CustomHandle
                 type="target"
                 position={Position.Bottom}
-                id="a"
+                id={createHandleId(NodeType.AND_NODE, "input", 1)}
                 style={{ left: spacing + "%" }}
                 isConnectable={1}
             />
             <CustomHandle
                 type="target"
                 position={Position.Bottom}
-                id="b"
+                id={createHandleId(NodeType.AND_NODE, "input", 2)}
                 style={{ left: spacing * 2 + "%" }}
                 isConnectable={1}
             />
@@ -35,7 +42,7 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
                 <CustomHandle
                     type="target"
                     position={Position.Bottom}
-                    id={edge.id + edge.targetHandle}
+                    id={createHandleId(NodeType.AND_NODE, "input", i + 3)}
                     key={edge.id + edge.targetHandle}
                     style={{ left: spacing * (i + 3) + "%" }}
                     isConnectable={1}

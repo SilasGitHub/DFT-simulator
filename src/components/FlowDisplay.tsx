@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from "react"
+import React, {useEffect} from "react"
 import ReactFlow, {
     addEdge,
     Background,
@@ -6,7 +6,6 @@ import ReactFlow, {
     Connection,
     Controls,
     Edge,
-    getConnectedEdges,
     MiniMap,
     Node,
     ReactFlowInstance,
@@ -14,11 +13,14 @@ import ReactFlow, {
     useNodesState,
 } from "reactflow"
 import "reactflow/dist/style.css"
-import {EventNodeType, nodeMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
+import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
+import {createNodeId, parseHandleId} from "../utils/idParser.ts"
+
+const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
 
 const initialNodes: NodeUnion[] = [
-    {id: "1", data: {failed: null, label: "SYS"}, position: {x: 800, y: 450}, selectable: false, type: NodeType.SYSTEM_NODE},
+    {id: createNodeId(NodeType.SYSTEM_NODE, "SYS"), data: {failed: null, label: "SYS"}, position: {x: screenCenter.x - 25, y: screenCenter.y - 25}, selectable: false, type: NodeType.SYSTEM_NODE},
 ]
 
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -242,10 +244,11 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 
     const onConnectWrap = (connection: Connection) => {
         const sourceNode = nodes.find(node => node.id === connection.source) as Node
-        if (connection.targetHandle?.includes("spare") && sourceNode.type === NodeType.EVENT_NODE) {
+        const {handleType} = parseHandleId(connection.targetHandle)
+        if (handleType === "spare" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = true
             setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
-        } else if (!connection.targetHandle?.includes("dependent") && sourceNode.type === NodeType.EVENT_NODE) {
+        } else if (handleType !== "dependent" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = false
             setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
         }
@@ -297,7 +300,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                nodeTypes={nodeMap}
+                nodeTypes={nodeElementsMap}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}

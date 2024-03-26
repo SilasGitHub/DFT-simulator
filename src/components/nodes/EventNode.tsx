@@ -1,6 +1,7 @@
 import {NodeProps, Position} from "reactflow"
 import CustomHandle from '../CustomHandle';
-import {EventNodeData} from "./Nodes.ts"
+import {EventNodeData, NodeType} from "./Nodes.ts"
+import {createHandleId} from "../../utils/idParser.ts"
 
 
 export default function EventNode({data}: NodeProps<EventNodeData>) {
@@ -8,7 +9,12 @@ export default function EventNode({data}: NodeProps<EventNodeData>) {
     return (
         <div className="entity dot" style={{backgroundColor: color}}>
           <p>{data.label}</p>
-          <CustomHandle type="source" position={Position.Top} id='a' isConnectable={true} />
+          <CustomHandle
+              type="source"
+              position={Position.Top}
+              id={createHandleId(NodeType.EVENT_NODE, "output")}
+              isConnectable={true}
+          />
         </div>
       );
 }
