@@ -10,7 +10,7 @@ export const useDynamicHandles = (id: string, handleType?: string) => {
 
         const connectedEdges = s.edges.filter((e) => {
             const {handleType: parsedHandleType} = parseHandleId(e.targetHandle)
-            return e.target === id && (handleType ? parsedHandleType : true)
+            return e.target === id && (handleType ? handleType === parsedHandleType : true)
         })
         if (connectedEdges.length !== edgeCount) {
             setEdgeCount(() => {
