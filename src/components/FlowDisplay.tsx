@@ -245,7 +245,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     const onConnectWrap = (connection: Connection) => {
         const sourceNode = nodes.find(node => node.id === connection.source) as Node
         const {handleType} = parseHandleId(connection.targetHandle)
-        if (handleType && sourceNode.type === NodeType.EVENT_NODE) {
+        if (handleType === "spare" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = true
             setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
         } else if (handleType !== "dependent" && sourceNode.type === NodeType.EVENT_NODE) {
