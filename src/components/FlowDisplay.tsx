@@ -43,6 +43,7 @@ interface FlowDisplayProps {
 
 let localAnimationState: AnimationState = "stopped"
 let toFailIds = new Array<string>()
+let activeTimeout: any = null
 
 export default function FlowDisplay(props: FlowDisplayProps) {
     const reactFlowWrapper = React.useRef(null)
@@ -78,8 +79,13 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     }, [nodes, setNodes])
 
     const doAnimate = React.useCallback(() => {
-        if (localAnimationState === "stopped") {
-            toFailIds = [];
+        if (activeTimeout) {
+            return
+        }
+        if (localAnimationState !== "playing") {
+            if (localAnimationState === "stopped") {
+                toFailIds = [];
+            }
             return;
         }
 
@@ -137,7 +143,11 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 								inactiveSpare.data.beingUsedBy = node.id;
 								inactiveSpare.data.failed = 0;
 								setNodes(nodes.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd));
-								return setTimeout(() => { doAnimate(); }, 1000) ;
+                                activeTimeout = setTimeout(() => {
+                                    activeTimeout = null;
+                                    doAnimate();
+                                }, 1000);
+                                return
 							} else {
 								nextState = order++;
 								break;
@@ -151,7 +161,11 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 							currentSpare.data.beingUsedBy === null;
 							currentSpare.data.failed = null;
 							setNodes(nodes.map(nd => nd.id === currentSpare.id ? currentSpare : nd));
-							return setTimeout(() => { doAnimate(); }, 1000) ;
+                            activeTimeout = setTimeout(() => {
+                                activeTimeout = null;
+                                doAnimate();
+                            }, 1000);
+                            return
 						}
 						nextState = 0;
 						break;
@@ -172,7 +186,11 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 						const dependentNodesToFail = dependentNodes.filter(node => !node.data.failed);
 						if (dependentNodesToFail.length > 0) {
                             toFailIds = dependentNodesToFail.map(node => node.id).concat(toFailIds);
-							return setTimeout(() => { doAnimate(); }, 1000) ;
+                            activeTimeout = setTimeout(() => {
+                                activeTimeout = null;
+                                doAnimate();
+                            }, 1000);
+							return
 						}
 						return;
 					}
@@ -190,10 +208,9 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             toFailIds = outgoingNodes.map(node => node.id).concat(toFailIds);
 		}
 
-        setTimeout(() => {
-            if (localAnimationState === "playing") {
-                doAnimate()
-            }
+        activeTimeout = setTimeout(() => {
+            activeTimeout = null;
+            doAnimate();
         }, 1000)
     }, [localAnimationState, nodes, edges, props.selectedIds])
 
