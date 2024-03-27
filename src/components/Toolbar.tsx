@@ -119,11 +119,6 @@ export default function Toolbar(props: ToolbarProps) {
         props.setAnimationState("stopped");
     }
 
-    function restartAnimation() {
-        props.setAnimationState("stopped");
-        props.setAnimationState("playing");
-    }
-
     const isPlayable = useMemo(() => {
         return props.selectedIds.length > 0
     }, [props.animationState, props.selectedIds])
@@ -192,7 +187,7 @@ export default function Toolbar(props: ToolbarProps) {
                     isCurrentlyAnimating ? 'w-52 lg:w-65' : 'w-[100%]'
                 )}
             >
-                <div className="flex w-46 lg:w-59 justify-between">
+                <div className="flex w-46 lg:w-59 justify-evenly">
                     <SquareButton
                         onClick={() => props.animationState === "playing" ? pauseAnimation() : startAnimation()}
                         className={isPlayable ? '' : 'disabled'}
@@ -203,9 +198,6 @@ export default function Toolbar(props: ToolbarProps) {
                     </SquareButton>
                     <SquareButton onClick={() => stopAnimation()} className={isCurrentlyAnimating ? '' : 'disabled'}>
                         <div className="i-mdi-stop text-stop"/>
-                    </SquareButton>
-                    <SquareButton onClick={() => restartAnimation()} className={isCurrentlyAnimating ? '' : 'disabled'}>
-                        <div className="i-mdi-restart text-stop"/>
                     </SquareButton>
                 </div>
                 {!isCurrentlyAnimating &&
