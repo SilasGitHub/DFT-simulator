@@ -2,8 +2,6 @@ import React, {useEffect, useMemo, useState} from "react"
 import SquareButton from "./SquareButton.tsx"
 import Divider from "./Divider.tsx"
 import {NodeType} from "./nodes/Nodes.ts"
-import AndIcon from "./node-icons/AndIcon.tsx"
-import {AnimationState} from "../App.tsx"
 import classNames from "classnames"
 import OrIcon from "./node-icons/OrIcon.tsx"
 import PAndIcon from "./node-icons/PAndIcon.tsx"
@@ -11,16 +9,13 @@ import XorIcon from "./node-icons/XorIcon.tsx"
 import EventSvg from "../img/event.svg"
 import SpareIcon from "./node-icons/SpareIcon.tsx"
 import FdepIcon from "./node-icons/FdepIcon.tsx"
-
-interface ToolbarProps {
-    selectedIds: Array<string>,
-    setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>
-    animationState: AnimationState,
-    setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>
-}
+import AndSvg from "../img/and.svg"
+import {useAnimationStore} from "../stores/useAnimationStore.tsx"
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
-export default function Toolbar(props: ToolbarProps) {
+export default function Toolbar() {
+    const {animationState, selectedIds, setAnimationState, setSelectedIds} = useAnimationStore()
+
     const [dragged, setDragged] = useState<number | null>(null)
     const [mouse, setMouse] = useState<[number, number]>([0, 0])
     const [dropZone, setDropZone] = useState(0)
@@ -68,7 +63,7 @@ export default function Toolbar(props: ToolbarProps) {
                 e.preventDefault()
                 setDragged(null)
 
-                props.setSelectedIds((selected) => reorderList([...selected], dragged, dropZone))
+                setSelectedIds(reorderList([...selectedIds], dragged, dropZone))
             }
         }
 
@@ -108,34 +103,34 @@ export default function Toolbar(props: ToolbarProps) {
     }
 
     function startAnimation() {
-        props.setAnimationState("playing");
+        setAnimationState("playing");
     }
 
     function pauseAnimation() {
-        props.setAnimationState("paused");
+        setAnimationState("paused");
     }
 
     function stopAnimation() {
-        props.setAnimationState("stopped");
+        setAnimationState("stopped");
     }
 
     const isPlayable = useMemo(() => {
-        return props.selectedIds.length > 0
-    }, [props.animationState, props.selectedIds])
+        return selectedIds.length > 0
+    }, [selectedIds])
 
     const isCurrentlyAnimating = useMemo(() => {
-        return props.animationState !== 'stopped'
-    }, [props.animationState, props.selectedIds])
+        return animationState !== 'stopped'
+    }, [animationState])
 
     return (
         <div id="toolbar" className="fixed z-10 bottom-0 p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-[100vw] pointer-events-none">
             <aside
                 className="w-52 lg:w-65 h-auto bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
             >
-                <h1 className="text-title border-b-2 border-black">
+                <h1 className="text-title border-b-2 border-node-border">
                     Selected Events
                 </h1>
-                {props.selectedIds.length > 0
+                {selectedIds.length > 0
                     ? <div>
                         {/* ----------FLOATING ITEM---------- */}
                         {dragged !== null && (
@@ -144,7 +139,7 @@ export default function Toolbar(props: ToolbarProps) {
                                      left: `${mouse[0]}px`,
                                      top: `${mouse[1]}px`,
                                  }}
-                            >{props.selectedIds[dragged]}</div>
+                            >{selectedIds[dragged]}</div>
                         )}
 
                         {/* ----------MAIN LIST---------- */}
@@ -152,7 +147,7 @@ export default function Toolbar(props: ToolbarProps) {
                             <div className={`list-item drop-zone ${
                                 dragged === null || dropZone !== 0 ? "hidden" : ""
                             }`} /> {/* Drop zone before all items */}
-                            {props.selectedIds.map((value, index) => (
+                            {selectedIds.map((value, index) => (
                                 <>
                                     {dragged !== index && (
                                         <>
@@ -189,11 +184,11 @@ export default function Toolbar(props: ToolbarProps) {
             >
                 <div className="flex w-46 lg:w-59 justify-evenly">
                     <SquareButton
-                        onClick={() => props.animationState === "playing" ? pauseAnimation() : startAnimation()}
+                        onClick={() => animationState === "playing" ? pauseAnimation() : startAnimation()}
                         className={isPlayable ? '' : 'disabled'}
                     >
                         <div
-                            className={props.animationState === "playing" ? "i-mdi-pause text-pause" : "i-mdi-play text-play"}
+                            className={animationState === "playing" ? "i-mdi-pause text-pause" : "i-mdi-play text-play"}
                         />
                     </SquareButton>
                     <SquareButton onClick={() => stopAnimation()} className={isCurrentlyAnimating ? '' : 'disabled'}>
@@ -205,13 +200,13 @@ export default function Toolbar(props: ToolbarProps) {
                         <div className="flex flex-wrap gap-2 justify-evenly">
 
                             <SquareButton onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
-                                <img src={EventSvg}/>
+                                <img className="entity" src={EventSvg}/>
                             </SquareButton>
 
                             <Divider orientation="vertical"/>
 
                             <SquareButton onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)} draggable>
-                                <AndIcon/>
+                                <img className="entity gate-img" src={AndSvg}/>
                             </SquareButton>
                             <SquareButton onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)} draggable>
                                 <OrIcon/>

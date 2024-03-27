@@ -21,9 +21,9 @@ export default defineConfig({
         "text-main": "font-semibold",
         "text-alt": "text-gray-500 font-semibold",
         "entity": "font-semibold flex items-center justify-center overflow-hidden h-full text-center transition duration-200",
-        "icon-bordered": "font-semibold flex border-2 border-black bg-dormant overflow-hidden rounded-xl text-center transition duration-200",
+        "icon-bordered": "font-semibold flex border-2 border-node-border bg-dormant overflow-hidden rounded-xl text-center transition duration-200",
         "icon-horizontal-box": "w-40 h-25 flex-col justify-between transition duration-200",
-        "dot": "flex min-w-[50px] border-2 border-black bg-dormant rounded-full items-center justify-center aspect-square",
+        "dot": "flex min-w-[50px] border-2 border-node-border bg-dormant rounded-full items-center justify-center aspect-square",
         "gate-img": "contain h-full relative",
     },
     theme: {
@@ -38,6 +38,7 @@ export default defineConfig({
             "pause": theme.colors.orange[500],
             "stop": theme.colors.red[500],
             "background-floating": theme.colors.gray[100] + "EE",
+            "node-border": "#1a192b",
         },
     },
 })

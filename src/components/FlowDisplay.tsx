@@ -16,8 +16,8 @@ import "reactflow/dist/style.css"
 import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
-import {AnimationState} from "../App.tsx"
 import Toolbar from "./Toolbar.tsx"
+import {AnimationState, useAnimationStore} from "../stores/useAnimationStore.tsx"
 
 const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
 
@@ -34,18 +34,12 @@ function getId(type : string) {
 	return `${type}_${idMapper.get(type)}`
 }
 
-interface FlowDisplayProps {
-    selectedIds: Array<string>,
-    setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>
-    animationState: AnimationState,
-    setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>
-}
-
 let localAnimationState: AnimationState = "stopped"
 let toFailIds = new Array<string>()
 let activeTimeout: any = null
 
-export default function FlowDisplay(props: FlowDisplayProps) {
+export default function FlowDisplay() {
+    const {addSelectedIds, animationState, removeSelectedIds, selectedIds} = useAnimationStore()
     const reactFlowWrapper = React.useRef(null)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
@@ -90,7 +84,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         }
 
 		if (toFailIds.length === 0) {
-            toFailIds = [...props.selectedIds];
+            toFailIds = [...selectedIds];
 			resetAnimation();
 		} else {
 			const nodeName = toFailIds.shift();
@@ -212,17 +206,17 @@ export default function FlowDisplay(props: FlowDisplayProps) {
             activeTimeout = null;
             doAnimate();
         }, 1000)
-    }, [localAnimationState, nodes, edges, props.selectedIds])
+    }, [localAnimationState, nodes, edges, selectedIds])
 
     useEffect(() => {
-        localAnimationState = props.animationState
+        localAnimationState = animationState
 
         //Disable/enable interaction with the FlowDisplay
         setDisabled(localAnimationState !== "stopped")
 
         if (localAnimationState === "stopped") {
             setNodes(nodes.map(node => {
-                node.data.failed = props.selectedIds.includes(node.id) ? 1 : null
+                node.data.failed = selectedIds.includes(node.id) ? 1 : null
                 return node
             }))
             return
@@ -230,7 +224,7 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         if (localAnimationState === "playing") {
             doAnimate()
         }
-    }, [props.animationState])
+    }, [animationState])
 
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
@@ -281,15 +275,15 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     }
 
     const onNodeClick = (_: React.MouseEvent, node: Node) => {
-        if (props.animationState !== "stopped" || node.type !== NodeType.EVENT_NODE) {
+        if (animationState !== "stopped" || node.type !== NodeType.EVENT_NODE) {
             return
         }
 
         // If we double click on a basic event node, select or unselect it from the list of events to fail
-        if (props.selectedIds.includes(node.id)) {
-            props.setSelectedIds(props.selectedIds.filter((id) => id !== node.id))
+        if (selectedIds.includes(node.id)) {
+            removeSelectedIds([node.id])
         } else {
-            props.setSelectedIds(props.selectedIds.concat([node.id]))
+            addSelectedIds([node.id])
         }
 
         // Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
@@ -309,15 +303,15 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     }
 
 	const onEdgesDelete = (deleted : Edge[]) => {
-		props.setSelectedIds(props.selectedIds.filter(id => !deleted.map(edge => edge.id).includes(id)));
+        removeSelectedIds(selectedIds.filter(id => !deleted.map(edge => edge.id).includes(id)));
 	}
 
 	const onNodesDelete = (deleted : Node[]) => {
 		// let connectedEdges = new Array<Edge>();
 		// deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
 		// const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
-		props.setSelectedIds(props.selectedIds.filter(id => !deleted.map(node => node.id).includes(id)));
-		};
+		removeSelectedIds(selectedIds.filter(id => !deleted.map(node => node.id).includes(id)));
+    };
 
     return (
         <div className="h-full flex-grow" ref={reactFlowWrapper}>
@@ -342,14 +336,9 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 elementsSelectable={!disabled}
             >
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
-                <Controls position="top-left" showInteractive={props.animationState === "stopped"}  className="rounded-lg overflow-hidden border-4 border-theme-border bg-background-floating"/>
+                <Controls position="top-left" showInteractive={animationState === "stopped"}  className="rounded-lg overflow-hidden border-4 border-theme-border bg-background-floating"/>
                 <MiniMap position="top-right" className="rounded-2xl overflow-hidden border-4 border-theme-border bg-background-floating"/>
-                <Toolbar
-                    animationState={props.animationState}
-                    setAnimationState={props.setAnimationState}
-                    selectedIds={props.selectedIds}
-                    setSelectedIds={props.setSelectedIds}
-                />
+                <Toolbar/>
             </ReactFlow>
         </div>
     )
