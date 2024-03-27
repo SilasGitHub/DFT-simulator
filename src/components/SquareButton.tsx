@@ -5,7 +5,7 @@ export default function SquareButton({children, className, ...rest}: { children:
     return (
         <button
             {...rest}
-            className={classNames('button-square h-15 w-15 flex items-center justify-center bg-white', className)}
+            className={classNames('button-square h-15 w-15 lg:h-16 lg:w-16 xl:h-17 xl:w-17 flex items-center justify-center bg-white', className)}
         >
             {children}
         </button>
