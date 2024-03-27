@@ -130,7 +130,7 @@ export default function Toolbar(props: ToolbarProps) {
     return (
         <div id="toolbar" className="fixed z-10 bottom-0 p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-[100vw] pointer-events-none">
             <aside
-                className="w-52 lg:w-65 h-auto bg-background-2 rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
+                className="w-52 lg:w-65 h-auto bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
             >
                 <h1 className="text-title border-b-2 border-black">
                     Selected Events
@@ -183,7 +183,7 @@ export default function Toolbar(props: ToolbarProps) {
             </aside>
             <aside
                 className={classNames(
-                    'bg-background-2 rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2',
+                    'bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2',
                     isCurrentlyAnimating ? 'w-52 lg:w-65' : 'w-[100%]'
                 )}
             >

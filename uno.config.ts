@@ -37,8 +37,7 @@ export default defineConfig({
             "play": theme.colors.green[500],
             "pause": theme.colors.orange[500],
             "stop": theme.colors.red[500],
-            "background-1": theme.colors.gray[50],
-            "background-2": theme.colors.gray[100],
+            "background-floating": theme.colors.gray[100] + "EE",
         },
     },
 })

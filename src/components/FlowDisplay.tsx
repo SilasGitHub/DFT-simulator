@@ -342,8 +342,8 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 elementsSelectable={!disabled}
             >
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
-                <Controls position="top-left" showInteractive={props.animationState === "stopped"}  className="rounded-lg overflow-hidden border-4 border-theme-border bg-background-1"/>
-                <MiniMap position="top-right" className="rounded-2xl overflow-hidden border-4 border-theme-border bg-background-1"/>
+                <Controls position="top-left" showInteractive={props.animationState === "stopped"}  className="rounded-lg overflow-hidden border-4 border-theme-border bg-background-floating"/>
+                <MiniMap position="top-right" className="rounded-2xl overflow-hidden border-4 border-theme-border bg-background-floating"/>
                 <Toolbar
                     animationState={props.animationState}
                     setAnimationState={props.setAnimationState}
