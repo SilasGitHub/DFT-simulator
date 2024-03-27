@@ -1,14 +1,13 @@
 import {NodeProps, Position} from "reactflow"
-import AndSvg from "./../../img/and.svg"
 import CustomHandle from "../CustomHandle"
 import {AndNodeData, NodeType} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
+import AndIcon from "../node-icons/AndIcon.tsx"
+import classNames from "classnames"
 
 
 export default function AndNode({id, data}: NodeProps<AndNodeData>) {
-	const color = data.failed !== null ? (data.failed ? 'red' : 'green') : '';
-
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id);
     const nHandles = Math.max(connectedSources.length + 1, 2);
@@ -48,12 +47,13 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
                     isConnectable={1}
                 />
             ))}
-            <div className="entity and">
-                <img
-                    className="gate-img"
-                    style={{backgroundColor: color}}
-                    src={AndSvg}
-                />
+            <div
+                className={classNames(
+                    "icon-bordered py-2 px-8",
+                    data?.failed !== null && data?.failed !== undefined ? (data?.failed > 0 ? "bg-failed" : "bg-success") : "",
+                )}
+            >
+                <AndIcon label={data.label} failed={data.failed}/>
             </div>
         </>
     )

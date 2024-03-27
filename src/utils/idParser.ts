@@ -1,7 +1,7 @@
 import {NodeType} from "../components/nodes/Nodes.ts"
 
 export const createNodeId = (nodeType: NodeType, name: string, number?: number) => {
-    return `${nodeType}:${name}:${number}`
+    return `${nodeType}:${name}:${number ?? ""}`
 }
 
 export const parseNodeId = (nodeId: string | null) => {
@@ -19,7 +19,7 @@ export const parseNodeId = (nodeId: string | null) => {
 }
 
 export const createHandleId = (nodeType: NodeType, handleType: string, number?: number) => {
-    return `${nodeType}:${handleType}:${number}`
+    return `${nodeType}:${handleType}:${number ?? ""}`
 }
 
 export const parseHandleId = (handleId: string | null | undefined) => {

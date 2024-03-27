@@ -27,11 +27,6 @@ body {
     }
 }
 
-#flowdisplay {
-    flex-grow: 1;
-    height: 100%;
-}
-
 .list {
     display: flex;
     flex-direction: column;
@@ -48,7 +43,6 @@ body {
     white-space: nowrap;
     cursor: pointer;
     height: 1.5rem;
-    background-color: white;
     display: list-item;
     list-style: inside;
 }
@@ -60,7 +54,7 @@ body {
 
 .list-item.drop-zone {
     background-color: #ccc;
-    transition-property: height padding;
+    transition-property: height, padding;
     transition-duration: 250ms;
     transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
     overflow: hidden;
@@ -70,7 +64,6 @@ body {
     height: 0px;
     padding: 0px
 }
-
 
 /*reactflow overwrites*/
 path.react-flow__edge-path {
@@ -89,9 +82,18 @@ path.react-flow__edge-path:hover {
 
 /*highlight handles on hover*/
 .react-flow__handle-connecting {
-    background: #ff6060;
+    @apply bg-connectable;
 }
 
 .react-flow__handle-connecting.valid {
-    background: #55dd99;
+    @apply bg-not-connectable;
+}
+
+// display handle above background
+.react-flow__handle {
+    z-index: 1;
+}
+
+.react-flow__panel {
+    @apply m-[15px] lg:m-4 xl:m-6 2xl:m-8;
 }

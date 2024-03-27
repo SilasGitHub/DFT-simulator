@@ -8,7 +8,7 @@ export default function Divider({orientation}: DividerProps) {
             'flex items-center justify-center'
         }>
             <div
-                className={orientation === "vertical" ? "h-[80%] w-1 rounded-full bg-gray-300" : "w-[80%] h-1 rounded-full bg-gray-300"}
+                className={orientation === "vertical" ? "h-[80%] w-1 rounded-full bg-theme-border" : "w-[80%] h-1 rounded-full bg-theme-border"}
             />
         </div>
     )

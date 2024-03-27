@@ -26,8 +26,8 @@ export type AndNodeData = CommonNodeData
 export type OrNodeData = CommonNodeData
 export type XorNodeData = CommonNodeData
 
-export type FdepNodeData = CommonNodeData
 export type PAndNodeData = CommonNodeData
+export type FdepNodeData = CommonNodeData
 export type SpareNodeData = CommonNodeData
 
 export enum NodeType {
@@ -38,8 +38,8 @@ export enum NodeType {
     OR_NODE = "OR_NODE",
     XOR_NODE = "XOR_NODE",
 
-    FDEP_NODE = "FDEP_NODE",
     PAND_NODE = "PAND_NODE",
+    FDEP_NODE = "FDEP_NODE",
     SPARE_NODE = "SPARE_NODE",
 }
 
@@ -63,12 +63,12 @@ export interface XorNodeType extends Node<XorNodeData> {
     type: NodeType.XOR_NODE;
 }
 
-export interface FdepNodeType extends Node<FdepNodeData> {
-    type: NodeType.FDEP_NODE;
-}
-
 export interface PAndNodeType extends Node<PAndNodeData> {
     type: NodeType.PAND_NODE;
+}
+
+export interface FdepNodeType extends Node<FdepNodeData> {
+    type: NodeType.FDEP_NODE;
 }
 
 export interface SpareNodeType extends Node<SpareNodeData> {
@@ -95,10 +95,10 @@ export const handleRestrictionsMap: {[key: string]: {[key: string]: NodeType[]} 
     [NodeType.OR_NODE]: undefined,
     [NodeType.XOR_NODE]: undefined,
 
+    [NodeType.PAND_NODE]: undefined,
     [NodeType.FDEP_NODE]: {
         "dependent": [NodeType.EVENT_NODE]
     },
-    [NodeType.PAND_NODE]: undefined,
     [NodeType.SPARE_NODE]: {
         "spare": [NodeType.EVENT_NODE]
     },
@@ -112,7 +112,7 @@ export const nodeElementsMap = {
     [NodeType.OR_NODE]: OrNode,
     [NodeType.XOR_NODE]: XorNode,
 
-    [NodeType.FDEP_NODE]: FdepNode,
     [NodeType.PAND_NODE]: PAndNode,
+    [NodeType.FDEP_NODE]: FdepNode,
     [NodeType.SPARE_NODE]: SpareNode,
 }
