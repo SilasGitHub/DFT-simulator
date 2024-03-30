@@ -32,7 +32,7 @@ body {
     flex-direction: column;
 
     justify-content: center;
-    text-align: center;
+    text-align: left;
 
     width: auto;
     margin: 10px 0px;
@@ -44,11 +44,14 @@ body {
     cursor: pointer;
     height: 1.5rem;
     display: list-item;
-    list-style: inside;
+}
+
+.in-list {
+	list-style: inside;
 }
 
 .floating {
-    position: absolute;
+    position: fixed;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -60,7 +63,7 @@ body {
     overflow: hidden;
 }
 
-.list-item.drop-zone.hidden {
+.list-item.drop-zone.special-hidden {
     height: 0px;
     padding: 0px
 }
