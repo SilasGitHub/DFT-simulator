@@ -44,44 +44,44 @@ export enum NodeType {
 }
 
 export interface SystemNodeType extends Node<SystemNodeData> {
-    type: NodeType.SYSTEM_NODE;
+    type?: NodeType.SYSTEM_NODE;
 }
 
 export interface EventNodeType extends Node<EventNodeData> {
-    type: NodeType.EVENT_NODE;
+    type?: NodeType.EVENT_NODE;
 }
 
 export interface AndNodeType extends Node<AndNodeData> {
-    type: NodeType.AND_NODE;
+    type?: NodeType.AND_NODE;
 }
 
 export interface OrNodeType extends Node<OrNodeData> {
-    type: NodeType.OR_NODE;
+    type?: NodeType.OR_NODE;
 }
 
 export interface XorNodeType extends Node<XorNodeData> {
-    type: NodeType.XOR_NODE;
+    type?: NodeType.XOR_NODE;
 }
 
 export interface PAndNodeType extends Node<PAndNodeData> {
-    type: NodeType.PAND_NODE;
+    type?: NodeType.PAND_NODE;
 }
 
 export interface FdepNodeType extends Node<FdepNodeData> {
-    type: NodeType.FDEP_NODE;
+    type?: NodeType.FDEP_NODE;
 }
 
 export interface SpareNodeType extends Node<SpareNodeData> {
-    type: NodeType.SPARE_NODE;
+    type?: NodeType.SPARE_NODE;
 }
 
-export interface UnknownNodeType extends Node<any> {
-    type: undefined
-}
+// export interface UnknownNodeType extends Node<any> {
+//     type?: undefined
+// }
 
 export type NodeUnion = SystemEventNodeUnion | GateNodeUnion;
-export type SystemEventNodeUnion = SystemNodeType | EventNodeType | UnknownNodeType;
-export type GateNodeUnion = AndNodeType | OrNodeType | XorNodeType | PAndNodeType | FdepNodeType | SpareNodeType | UnknownNodeType;
+export type SystemEventNodeUnion = SystemNodeType | EventNodeType;
+export type GateNodeUnion = AndNodeType | OrNodeType | XorNodeType | PAndNodeType | FdepNodeType | SpareNodeType;
 
 /**
  * A map with the node type as key and the allowed handle connection types as value.

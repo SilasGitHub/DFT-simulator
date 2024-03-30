@@ -14,8 +14,6 @@ export default defineConfig({
         ["m-1", {margin: "1px"}],
     ],
     shortcuts: {
-        "button-square": "hover:shadow-md shadow-gray-300 border-2 border-theme-border bg-white text-black font-bold p-1.5 rounded-xl aspect-square text-3xl transition duration-150 cursor-pointer",
-        "button-gate": "button-square",
         "disabled": "opacity-50 pointer-events-none",
         "text-title": "font-bold text-2xl",
         "text-main": "font-semibold",
