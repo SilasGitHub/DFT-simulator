@@ -300,14 +300,14 @@ export default function FlowDisplay() {
     }
 
     const onEdgesDelete = (deleted: Edge[]) => {
-        removeSelectedToFailIds(selectedToFailIds.filter(id => !deleted.map(edge => edge.id).includes(id)))
+        removeSelectedToFailIds(deleted.map(edge => edge.id))
     }
 
     const onNodesDelete = (deleted: Node[]) => {
         // let connectedEdges = new Array<Edge>();
         // deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
         // const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
-        removeSelectedToFailIds(selectedToFailIds.filter(id => !deleted.map(node => node.id).includes(id)))
+        removeSelectedToFailIds(deleted.map(node => node.id))
     }
 
     return (
