@@ -5,12 +5,16 @@ import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
 import OrIcon from "../node-icons/OrIcon.tsx"
 import classNames from "classnames"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
 export default function OrNode({id, data}: NodeProps<OrNodeData>) {
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id)
     const nHandles = Math.max(connectedSources.length + 1, 2)
     const spacing = 100 / (nHandles + 1)
+
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
 
     return (
         <div>
@@ -49,10 +53,10 @@ export default function OrNode({id, data}: NodeProps<OrNodeData>) {
             <div
                 className={classNames(
                     "icon-bordered py-2 px-8",
-                    data?.failed !== null && data?.failed !== undefined ? (data?.failed > 0 ? "bg-failed" : "bg-success") : "",
+                    failed !== null ? (failed > 0 ? "bg-failed" : "bg-success") : "",
                 )}
             >
-                <OrIcon label={data.label} failed={data.failed}/>
+                <OrIcon label={data.label} failed={failed}/>
             </div>
         </div>
     )

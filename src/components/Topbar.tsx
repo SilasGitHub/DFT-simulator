@@ -4,6 +4,7 @@ import React, {useCallback} from "react"
 import {ReactFlowInstance, useReactFlow} from "reactflow"
 import {downloadFile} from "../utils/downloadFile.ts"
 import TopbarSpeedChanger from "./TopbarSpeedChanger.tsx"
+import {useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
 
 type TopBarProps = {
     reactFlowInstance: ReactFlowInstance | null
@@ -11,7 +12,8 @@ type TopBarProps = {
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
 export default function Topbar({reactFlowInstance}: TopBarProps) {
-    const {animationState, clearDiagram, toJson, loadJson} = useDiagramStateStore()
+    const {clearDiagram, toJson, loadJson} = useDiagramStateStore()
+    const {animationState, setSelectedToFailIds} = useDiagramAnimationStore()
     const {setViewport} = useReactFlow()
     const loadDiagramInput = React.useRef<HTMLInputElement>(null)
 
@@ -65,7 +67,12 @@ export default function Topbar({reactFlowInstance}: TopBarProps) {
                             <div className="i-mdi-content-save text-main"/>
                         </TopbarButton>
                         <TopbarButton
-                            onClick={clearDiagram}
+                            onClick={() => {
+                                if (confirm("Are you sure you want to clear the diagram?")) {
+                                    setSelectedToFailIds([])
+                                    clearDiagram()
+                                }
+                            }}
                         >
                             <div className="i-mdi-delete text-stop"/>
                         </TopbarButton>

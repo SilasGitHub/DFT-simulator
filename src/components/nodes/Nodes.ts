@@ -10,16 +10,11 @@ import SpareNode from "./SpareNode.tsx"
 
 export type CommonNodeData = {
     label: string;
-    failed: null | number;
-    /**
-     * Which types of nodes should be able to connect to this handle
-     */
 }
 
 export type SystemNodeData = CommonNodeData
 export type EventNodeData = {
     isSpare: boolean;
-	beingUsedBy: string;
 } & CommonNodeData
 
 export type AndNodeData = CommonNodeData

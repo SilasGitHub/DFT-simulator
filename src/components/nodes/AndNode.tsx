@@ -5,6 +5,7 @@ import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
 import AndIcon from "../node-icons/AndIcon.tsx"
 import classNames from "classnames"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
 
 export default function AndNode({id, data}: NodeProps<AndNodeData>) {
@@ -12,6 +13,9 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
     const connectedSources = useDynamicHandles(id);
     const nHandles = Math.max(connectedSources.length + 1, 2);
     const spacing = 100 / (nHandles + 1);
+
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
 
     return (
         <>
@@ -50,10 +54,10 @@ export default function AndNode({id, data}: NodeProps<AndNodeData>) {
             <div
                 className={classNames(
                     "icon-bordered py-2 px-8",
-                    data?.failed !== null && data?.failed !== undefined ? (data?.failed > 0 ? "bg-failed" : "bg-success") : "",
+                    failed !== null &&failed !== undefined ? (failed > 0 ? "bg-failed" : "bg-success") : "",
                 )}
             >
-                <AndIcon label={data.label} failed={data.failed}/>
+                <AndIcon label={data.label} failed={failed}/>
             </div>
         </>
     )

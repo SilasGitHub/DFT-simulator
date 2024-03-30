@@ -10,11 +10,11 @@ import EventSvg from "../img/event.svg"
 import SpareIcon from "./node-icons/SpareIcon.tsx"
 import FdepIcon from "./node-icons/FdepIcon.tsx"
 import AndSvg from "../img/and.svg"
-import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
+import {useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
 export default function Toolbar() {
-    const {animationState, selectedIds, setAnimationState, setSelectedIds} = useDiagramStateStore()
+    const {animationState, selectedToFailIds, setAnimationState, setSelectedToFailIds} = useDiagramAnimationStore()
 
     const [dragged, setDragged] = useState<number | null>(null)
     const [mouse, setMouse] = useState<[number, number]>([0, 0])
@@ -63,7 +63,7 @@ export default function Toolbar() {
                 e.preventDefault()
                 setDragged(null)
 
-                setSelectedIds(reorderList([...selectedIds], dragged, dropZone))
+                setSelectedToFailIds(reorderList([...selectedToFailIds], dragged, dropZone))
             }
         }
 
@@ -115,8 +115,8 @@ export default function Toolbar() {
     }
 
     const isPlayable = useMemo(() => {
-        return selectedIds.length > 0
-    }, [selectedIds])
+        return selectedToFailIds.length > 0
+    }, [selectedToFailIds])
 
     const isCurrentlyAnimating = useMemo(() => {
         return animationState !== 'stopped'
@@ -130,7 +130,7 @@ export default function Toolbar() {
                 <h1 className="text-title border-b-2 border-node-border">
                     Selected Events
                 </h1>
-                {selectedIds.length > 0
+                {selectedToFailIds.length > 0
                     ? <div>
                         {/* ----------FLOATING ITEM---------- */}
                         {dragged !== null && (
@@ -139,7 +139,7 @@ export default function Toolbar() {
                                      left: `${mouse[0]}px`,
                                      top: `${mouse[1]}px`,
                                  }}
-                            >{selectedIds[dragged]}</div>
+                            >{selectedToFailIds[dragged]}</div>
                         )}
 
                         {/* ----------MAIN LIST---------- */}
@@ -147,7 +147,7 @@ export default function Toolbar() {
                             <div className={`list-item drop-zone ${
                                 dragged === null || dropZone !== 0 ? "hidden" : ""
                             }`} /> {/* Drop zone before all items */}
-                            {selectedIds.map((value, index) => (
+                            {selectedToFailIds.map((value, index) => (
                                 <>
                                     {dragged !== index && (
                                         <>

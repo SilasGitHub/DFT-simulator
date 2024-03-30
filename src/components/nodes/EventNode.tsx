@@ -3,9 +3,13 @@ import CustomHandle from "../CustomHandle"
 import {EventNodeData, NodeType} from "./Nodes.ts"
 import {createHandleId} from "../../utils/idParser.ts"
 import EventIcon from "../node-icons/EventIcon.tsx"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
 
-export default function EventNode({data}: NodeProps<EventNodeData>) {
+export default function EventNode({id, data}: NodeProps<EventNodeData>) {
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
+
     return (
         <div>
             <CustomHandle
@@ -14,7 +18,7 @@ export default function EventNode({data}: NodeProps<EventNodeData>) {
                 id={createHandleId(NodeType.EVENT_NODE, "output")}
                 isConnectable={true}
             />
-            <EventIcon label={data.label} failed={data.failed}/>
+            <EventIcon label={data.label} failed={failed}/>
         </div>
     )
 }

@@ -4,12 +4,16 @@ import {NodeType, SpareNodeData} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
 import SpareIcon from "../node-icons/SpareIcon.tsx"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
 export default function SpareNode({id, data}: NodeProps<SpareNodeData>) {
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id, "spare")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
+
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
 
     return (
         <div>
@@ -46,7 +50,7 @@ export default function SpareNode({id, data}: NodeProps<SpareNodeData>) {
             ))}
 
             <div className="entity">
-                <SpareIcon label={data.label} failed={data.failed}/>
+                <SpareIcon label={data.label} failed={failed}/>
             </div>
         </div>
     )

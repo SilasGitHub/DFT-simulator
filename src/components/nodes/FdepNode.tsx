@@ -4,12 +4,16 @@ import {FdepNodeData, NodeType} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
 import FdepIcon from "../node-icons/FdepIcon.tsx"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
 export default function FDEPNode({id, data}: NodeProps<FdepNodeData>) {
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id, "dependent")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
+
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
 
     return (
         <div>
@@ -40,7 +44,7 @@ export default function FDEPNode({id, data}: NodeProps<FdepNodeData>) {
             ))}
 
             <div className="entity">
-                <FdepIcon label={data.label} failed={data.failed}/>
+                <FdepIcon label={data.label} failed={failed}/>
             </div>
         </div>
     )

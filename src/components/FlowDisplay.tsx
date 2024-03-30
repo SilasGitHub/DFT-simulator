@@ -10,11 +10,12 @@ import ReactFlow, {
     ReactFlowInstance,
 } from "reactflow"
 import "reactflow/dist/style.css"
-import {nodeElementsMap, NodeType} from "./nodes/Nodes.ts"
+import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
 import Toolbar from "./Toolbar.tsx"
-import {AnimationState, useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
+import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
 import Topbar from "./Topbar.tsx"
+import {AnimationState, useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
 
 // do alphabe tletter based on number of event nodes
 const ALPHABET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -35,11 +36,6 @@ export default function FlowDisplay() {
         edges,
         addNode,
         onEdgesChange,
-        addSelectedIds,
-        animationState,
-        removeSelectedIds,
-        selectedIds,
-        isUiLocked,
         getIncomingEdges,
         getOutgoingNodesAndEdges,
         getChildren,
@@ -47,6 +43,17 @@ export default function FlowDisplay() {
         onConnect,
         animationSpeed,
     } = useDiagramStateStore()
+    const {
+        addSelectedToFailIds,
+        animationState,
+        removeSelectedToFailIds,
+        getNodeFailState,
+        selectedToFailIds,
+        isUiLocked,
+        setNodeFailState,
+        setNodeBeingUsedBy,
+        getNodeBeingUsedBy,
+    } = useDiagramAnimationStore()
 
     const onDragOver = React.useCallback((event: React.DragEvent) => {
         event.preventDefault()
@@ -56,10 +63,10 @@ export default function FlowDisplay() {
     const resetAnimation = React.useCallback(() => {
         setNodes((nds) => nds.map(node => {
             if (node.type === NodeType.EVENT_NODE && node.data.isSpare) {
-                node.data.failed = null
-                node.data.beingUsedBy = null
+                setNodeFailState(node.id, null)
+                setNodeBeingUsedBy(node.id, null)
             } else {
-                node.data.failed = 0
+                setNodeFailState(node.id, 0)
             }
             node.selected = false
             return node
@@ -78,7 +85,7 @@ export default function FlowDisplay() {
         }
 
         if (toFailIds.length === 0) {
-            toFailIds = [...selectedIds]
+            toFailIds = [...selectedToFailIds]
             resetAnimation()
         } else {
             const nodeName = toFailIds.shift()
@@ -87,7 +94,7 @@ export default function FlowDisplay() {
             switch (node.type) {
                 case (NodeType.SYSTEM_NODE) : {
                     const children = getChildren(node)
-                    nextState = children.some(child => child.data.failed) ? order++ : 0
+                    nextState = children.some(child => getNodeFailState(child.id)) ? order++ : 0
                     break
                 }
                 case (NodeType.EVENT_NODE) : {
@@ -96,26 +103,24 @@ export default function FlowDisplay() {
                 }
                 case (NodeType.AND_NODE) : {
                     const children = getChildren(node)
-                    nextState = children.every(child => child.data.failed) ? order++ : 0
+                    nextState = children.every(child => getNodeFailState(child.id)) ? order++ : 0
                     break
                 }
                 case (NodeType.OR_NODE) : {
                     const children = getChildren(node)
-                    nextState = children.some(child => child.data.failed) ? order++ : 0
+                    nextState = children.some(child => getNodeFailState(child.id)) ? order++ : 0
                     break
                 }
                 case (NodeType.XOR_NODE) : {
                     const children = getChildren(node)
-                    const failedChildIndex = children.findIndex(child => child.data.failed)
+                    const failedChildIndex = children.findIndex(child => getNodeFailState(child.id))
                     children.splice(failedChildIndex, 1)
-                    nextState = (failedChildIndex >= 0 && children.findIndex(child => child.data.failed) === -1) ? order++ : 0
+                    nextState = (failedChildIndex >= 0 && children.findIndex(child => getNodeFailState(child.id)) === -1) ? order++ : 0
                     break
                 }
                 case (NodeType.PAND_NODE) : {
                     const children = getChildren(node)
-                    const failedList = children.map(child => {
-                        return child.data.failed
-                    })
+                    const failedList = children.map(child => getNodeFailState(child.id))
                     nextState = failedList.every(function (x, i) {
                         return x > 0 && (i === 0 || x >= failedList[i - 1])
                     }) ? order++ : 0
@@ -124,17 +129,17 @@ export default function FlowDisplay() {
                 case (NodeType.SPARE_NODE) : {
                     const incomingEdges = getIncomingEdges(node)
                     const primaryNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("primary"))?.source
-                    const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as Node
+                    const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as EventNodeType
                     const spareNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("spare")).map(edge => edge.source)
-                    const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as Node)
-                    const currentSpare = spareNodes.find(spare => spare.data.beingUsedBy === node.id && spare.data.failed === 0)
-                    if (primaryNode.data.failed) {
+                    const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as EventNodeType)
+                    const currentSpare = spareNodes.find(spare => getNodeBeingUsedBy(spare.id) === node.id && getNodeFailState(spare.id) === 0)
+                    if (getNodeFailState(primaryNode.id)) {
                         if (!currentSpare) {
-                            const inactiveSpare = spareNodes.find(node => node.data.failed === null)
+                            const inactiveSpare = spareNodes.find(node => getNodeFailState(node.id) === null)
                             if (inactiveSpare) {
-                                inactiveSpare.data.beingUsedBy = node.id
-                                inactiveSpare.data.failed = 0
-                                setNodes((nds) => nds.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd))
+                                setNodeBeingUsedBy(inactiveSpare.id, node.id)
+                                setNodeFailState(inactiveSpare.id, 0)
+                                setNodes((nds) => nds.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd) as NodeUnion[])
                                 activeTimeout = setTimeout(() => {
                                     activeTimeout = null
                                     doAnimate()
@@ -150,9 +155,9 @@ export default function FlowDisplay() {
                         }
                     } else {
                         if (currentSpare) {
-                            currentSpare.data.beingUsedBy === null
-                            currentSpare.data.failed = null
-                            setNodes((nds) => nds.map(nd => nd.id === currentSpare.id ? currentSpare : nd))
+                            setNodeBeingUsedBy(currentSpare.id, null)
+                            setNodeFailState(currentSpare.id, null)
+                            setNodes((nds) => nds.map(nd => nd.id === currentSpare.id ? currentSpare : nd) as NodeUnion[])
                             activeTimeout = setTimeout(() => {
                                 activeTimeout = null
                                 doAnimate()
@@ -166,19 +171,18 @@ export default function FlowDisplay() {
                 case (NodeType.FDEP_NODE) : {
                     const incomingEdges = getIncomingEdges(node)
                     const triggerNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("trigger"))?.source
-                    const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as Node
+                    const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as NodeUnion
                     const dependentNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("dependent")).map(edge => edge.source)
-                    const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as Node)
-                    nextState = triggerNode.data.failed ? order++ : 0
-                    if (triggerNode.data.failed) {
-                        if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+                    const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as EventNodeType)
+                    nextState = getNodeFailState(triggerNode.id) ? order++ : 0
+                    if (getNodeFailState(triggerNode.id)) {
+                        if ((nextState > 0 && getNodeFailState(node.id) as number > 0) || nextState === getNodeFailState(node.id)) {
                             return doAnimate()
                         }
-                        setNodes((nds) => nds.map(nd => {
-                            nd.data.failed = nd === node ? nextState : nd.data.failed
-                            return nd
-                        }))
-                        const dependentNodesToFail = dependentNodes.filter(node => !node.data.failed)
+                        for (const nd of nodes) {
+                            setNodeFailState(nd.id, nd === node ? nextState : getNodeFailState(nd.id))
+                        }
+                        const dependentNodesToFail = dependentNodes.filter(node => !getNodeFailState(node.id))
                         if (dependentNodesToFail.length > 0) {
                             toFailIds = dependentNodesToFail.map(node => node.id).concat(toFailIds)
                             activeTimeout = setTimeout(() => {
@@ -195,13 +199,12 @@ export default function FlowDisplay() {
                     return
                 }
             }
-            if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
+            if ((nextState > 0 && getNodeFailState(node.id) as number > 0) || nextState === getNodeFailState(node.id)) {
                 return doAnimate()
             }
-            setNodes((nds) => nds.map(nd => {
-                nd.data.failed = nd === node ? nextState : nd.data.failed
-                return nd
-            }))
+            for (const nd of nodes) {
+                setNodeFailState(nd.id, nd === node ? nextState : getNodeFailState(nd.id))
+            }
             const {outgoingNodes} = getOutgoingNodesAndEdges(node)
             toFailIds = outgoingNodes.map(node => node.id).concat(toFailIds)
         }
@@ -210,23 +213,22 @@ export default function FlowDisplay() {
             activeTimeout = null
             doAnimate()
         }, TIMEOUT / localAnimationSpeed)
-    }, [selectedIds, resetAnimation, getNodeById, setNodes, nodes, getOutgoingNodesAndEdges, getChildren, getIncomingEdges])
+    }, [selectedToFailIds, resetAnimation, getNodeById, setNodes, nodes, getOutgoingNodesAndEdges, getChildren, getIncomingEdges])
 
     useEffect(() => {
             const lastAnimationState = localAnimationState
             localAnimationState = animationState
 
             if (lastAnimationState !== "stopped" && localAnimationState === "stopped") {
-                setNodes((nds) => nds.map(node => {
-                    node.data.failed = selectedIds.includes(node.id) ? 1 : null
-                    return node
-                }))
+                for (const node of nodes) {
+                    setNodeFailState(node.id, selectedToFailIds.includes(node.id) ? 1 : null)
+                }
                 return
             } else if (localAnimationState === "playing") {
                 doAnimate()
             }
         },
-        [animationState, doAnimate, nodes, selectedIds, setNodes],
+        [animationState, doAnimate, nodes, selectedToFailIds, setNodes],
     )
 
     useEffect(() => {
@@ -259,9 +261,9 @@ export default function FlowDisplay() {
                 id: createNodeId(type),
                 type,
                 position,
-                data: {label: ALPHABET[nEventNodes % ALPHABET.length], failed: null},
+                data: {label: ALPHABET[nEventNodes % ALPHABET.length]},
                 selected: true,
-            })
+            } as NodeUnion)
         },
         [addNode, nodes, reactFlowInstance],
     )
@@ -271,10 +273,10 @@ export default function FlowDisplay() {
         const {handleType} = parseHandleId(connection.targetHandle)
         if (handleType === "spare" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = true
-            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node))
+            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node) as NodeUnion[])
         } else if (handleType !== "dependent" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = false
-            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node))
+            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node) as NodeUnion[])
         }
         onConnect(connection)
     }
@@ -285,36 +287,25 @@ export default function FlowDisplay() {
         }
 
         // If we double click on a basic event node, select or unselect it from the list of events to fail
-        if (selectedIds.includes(node.id)) {
-            removeSelectedIds([node.id])
+        if (selectedToFailIds.includes(node.id)) {
+            removeSelectedToFailIds([node.id])
         } else {
-            addSelectedIds([node.id])
+            addSelectedToFailIds([node.id])
         }
 
         // Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
-        setNodes((nds) => {
-            return nds.map((nd) => {
-                if (nd.id === node.id) {
-                    nd.data = {
-                        ...nd.data,
-                        failed: nd.data.failed === null ? 1 : null,
-                    }
-                }
-                return nd
-            })
-        })
-
+        setNodeFailState(node.id, getNodeFailState(node.id) === null ? 1 : null)
     }
 
     const onEdgesDelete = (deleted: Edge[]) => {
-        removeSelectedIds(selectedIds.filter(id => !deleted.map(edge => edge.id).includes(id)))
+        removeSelectedToFailIds(selectedToFailIds.filter(id => !deleted.map(edge => edge.id).includes(id)))
     }
 
     const onNodesDelete = (deleted: Node[]) => {
         // let connectedEdges = new Array<Edge>();
         // deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
         // const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
-        removeSelectedIds(selectedIds.filter(id => !deleted.map(node => node.id).includes(id)))
+        removeSelectedToFailIds(selectedToFailIds.filter(id => !deleted.map(node => node.id).includes(id)))
     }
 
     return (
@@ -340,7 +331,7 @@ export default function FlowDisplay() {
                 nodesFocusable={!isUiLocked}
                 elementsSelectable={!isUiLocked}
             >
-                <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
+                <Background variant={BackgroundVariant.Dots} gap={12} size={1.2}/>
                 <Controls
                     position="top-left"
                     showInteractive={true}
