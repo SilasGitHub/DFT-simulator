@@ -5,7 +5,7 @@ export default function TopbarButton({children, className, ...rest}: { children:
     return (
         <button
             {...rest}
-            className={classNames('hover:shadow-md shadow-gray-300 border-r-2.5 border-theme-border bg-white text-black font-bold p-1.5 aspect-square text-2xl transition duration-150 cursor-pointer flex items-center justify-center bg-white h-full', className)}
+            className={classNames('hover:shadow-md shadow-gray-300 border-r-2.5 border-theme-border bg-white text-black font-bold p-1.5 aspect-square text-2xl transition duration-150 cursor-pointer flex items-center justify-center bg-white w-10 h-full', className)}
         >
             {children}
         </button>

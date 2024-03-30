@@ -14,6 +14,7 @@ import {nodeElementsMap, NodeType} from "./nodes/Nodes.ts"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
 import Toolbar from "./Toolbar.tsx"
 import {AnimationState, useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
+import Topbar from "./Topbar.tsx"
 
 // do alphabe tletter based on number of event nodes
 const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -311,6 +312,7 @@ export default function FlowDisplay() {
 
     return (
         <div className="h-full flex-grow">
+            <Topbar reactFlowInstance={reactFlowInstance}/>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -332,10 +334,15 @@ export default function FlowDisplay() {
                 elementsSelectable={!isUiLocked}
             >
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
-                <Controls position="top-left" showInteractive={true}
-                          className="rounded-lg overflow-hidden border-4 border-theme-border bg-background-floating"/>
-                <MiniMap position="top-right"
-                         className="rounded-2xl overflow-hidden border-4 border-theme-border bg-background-floating"/>
+                <Controls
+                    position="top-left"
+                    showInteractive={true}
+                    className="rounded-lg shadow-md overflow-hidden border-4 border-theme-border bg-background-floating"
+                />
+                <MiniMap
+                    position="top-right"
+                    className="rounded-2xl shadow-md overflow-hidden border-4 border-theme-border bg-background-floating"
+                />
                 <Toolbar/>
             </ReactFlow>
         </div>

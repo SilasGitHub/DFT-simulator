@@ -10,7 +10,12 @@ import {
     OnEdgesChange,
     OnConnect,
     applyNodeChanges,
-    applyEdgeChanges, getOutgoers, getIncomers,
+    applyEdgeChanges,
+    getOutgoers,
+    getIncomers,
+    ReactFlowInstance,
+    Viewport,
+    ViewportHelperFunctionOptions,
 } from "reactflow"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
 import {NodeUnion} from "../components/nodes/Nodes.ts"
@@ -46,12 +51,14 @@ export type DiagramStateStore = {
     setNodes: (fn: (nodes: Node[]) => Node[]) => void;
     setEdges: (fn: (edges: Edge[]) => Edge[]) => void;
     addNode: (node: Node) => void;
-    clearDiagram: () => void;
     // custom getters to improve use of reactflow
+    clearDiagram: () => void;
     getNodeById: <T extends Node>(id: string | null | undefined) => T | null;
     getOutgoingNodesAndEdges: (node: Node) => { outgoingNodes: Node[], outgoingEdges: Edge[] };
     getIncomingEdges: (node: Node) => Edge[];
     getChildren: (node: Node) => Node[];
+    toJson: (rfInstance: ReactFlowInstance) => string;
+    loadJson: (json: string, setViewport: (viewport: Viewport, options?: ViewportHelperFunctionOptions) => void) => void;
     // animation stuff
     selectedIds: string[]
     addSelectedIds: (ids: string[]) => void
@@ -93,6 +100,7 @@ export const useDiagramStateStore = create<DiagramStateStore>()(
                 })
                 return set({nodes: [...disabledNodes, node]})
             },
+            // custom getters to improve use of reactflow
             clearDiagram: () => {
                 if (confirm("Are you sure you want to clear the diagram?")) {
                     set({
@@ -102,7 +110,6 @@ export const useDiagramStateStore = create<DiagramStateStore>()(
                     })
                 }
             },
-            // custom getters to improve use of reactflow
             getNodeById: <T extends Node>(id: string | null | undefined) => {
                 if (!id) {
                     return null
@@ -136,6 +143,22 @@ export const useDiagramStateStore = create<DiagramStateStore>()(
                     return (parseHandleId(edgeA.targetHandle).number as number) - (parseHandleId(edgeB.targetHandle).number as number)
                 })
                 return incomers
+            },
+            toJson: (rfInstance: ReactFlowInstance) => {
+                const flow = rfInstance.toObject()
+                return JSON.stringify(flow, null, 2)
+            },
+            loadJson: async (json: string, setViewport: (viewport: Viewport, options?: ViewportHelperFunctionOptions) => void) => {
+                const flow = JSON.parse(json)
+
+                if (flow) {
+                    set({
+                        nodes: flow.nodes || [],
+                        edges: flow.edges || [],
+                    })
+                    const {x = 0, y = 0, zoom = 1} = flow.viewport
+                    setViewport({x, y, zoom})
+                }
             },
             // animation stuff
             selectedIds: [],

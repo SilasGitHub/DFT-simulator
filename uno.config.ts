@@ -16,7 +16,7 @@ export default defineConfig({
     shortcuts: {
         "disabled": "opacity-50 pointer-events-none",
         "text-title": "font-bold text-2xl",
-        "text-main": "font-semibold",
+        "text-main": "font-semibold text-dark-200",
         "text-alt": "text-gray-500 font-semibold",
         "text-alt-2": "text-gray-400 font-semibold",
         "entity": "font-semibold flex items-center justify-center overflow-hidden h-full text-center transition duration-200",
