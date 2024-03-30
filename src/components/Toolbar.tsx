@@ -145,7 +145,7 @@ export default function Toolbar() {
                         {/* ----------MAIN LIST---------- */}
                         <ol className="list">
                             <div className={`list-item drop-zone ${
-                                dragged === null || dropZone !== 0 ? "hidden" : ""
+                                dragged === null || dropZone !== 0 ? "special-hidden" : ""
                             }`} /> {/* Drop zone before all items */}
                             {selectedIds.map((value, index) => (
                                 <>
@@ -153,7 +153,7 @@ export default function Toolbar() {
                                         <>
                                             <li
                                                 key={value}
-                                                className="list-item"
+                                                className="list-item in-list"
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     setDragged(index);
@@ -162,7 +162,7 @@ export default function Toolbar() {
                                                 {value}
                                             </li>
                                             <div
-                                                className={`list-item drop-zone ${dragged === null || dropZone !== index + 1 ? "hidden" : ""}`}
+                                                className={`list-item drop-zone ${dragged === null || dropZone !== index + 1 ? "special-hidden" : ""}`}
                                             />{/* drop zone after every item */}
                                         </>
                                     )}
