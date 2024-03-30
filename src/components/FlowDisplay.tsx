@@ -122,8 +122,10 @@ export default function FlowDisplay() {
                     const children = getChildren(node)
                     const failedList = children.map(child => getNodeFailState(child.id))
                     nextState = failedList.every(function (x, i) {
-                        return x > 0 && (i === 0 || x >= failedList[i - 1])
-                    }) ? order++ : 0
+                        return x !== null && x > 0 && (i === 0 || x >= (failedList[i - 1] ?? 0))
+                    })
+                        ? order++
+                        : 0
                     break
                 }
                 case (NodeType.SPARE_NODE) : {
