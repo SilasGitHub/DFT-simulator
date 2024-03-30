@@ -97,3 +97,25 @@ path.react-flow__edge-path:hover {
 .react-flow__panel {
     @apply m-[15px] lg:m-4 xl:m-6 2xl:m-8;
 }
+
+// toolbarbutton is a bit complex
+
+.toolbarbutton:not(.disabled) {
+    &:hover > button {
+        @apply -translate-y-3 shadow-md;
+    }
+    &:hover > span {
+        opacity: 1.0;
+    }
+}
+
+// toolbarbutton is a bit complex
+
+.toolbarbutton:not(.disabled) {
+    &:hover > button {
+        @apply -translate-y-3 shadow-md;
+    }
+    &:hover > span {
+        opacity: 1.0;
+    }
+}

@@ -18,6 +18,7 @@ export default defineConfig({
         "text-title": "font-bold text-2xl",
         "text-main": "font-semibold",
         "text-alt": "text-gray-500 font-semibold",
+        "text-alt-2": "text-gray-400 font-semibold",
         "entity": "font-semibold flex items-center justify-center overflow-hidden h-full text-center transition duration-200",
         "icon-bordered": "font-semibold flex border-2 border-node-border bg-dormant overflow-hidden rounded-xl text-center transition duration-200",
         "icon-horizontal-box": "w-40 h-25 flex-col justify-between transition duration-200",

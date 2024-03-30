@@ -185,44 +185,76 @@ export default function Toolbar() {
                 <div className="flex w-59 justify-evenly">
                     <ToolbarButton
                         onClick={() => animationState === "playing" ? pauseAnimation() : startAnimation()}
-                        className={isPlayable ? '' : 'disabled'}
+                        disabled={isPlayable}
+                        label={animationState === "playing" ? "Pause" : "Play"}
                     >
                         <div
                             className={animationState === "playing" ? "i-mdi-pause text-pause" : "i-mdi-play text-play"}
                         />
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => stopAnimation()} className={isCurrentlyAnimating ? '' : 'disabled'}>
+                    <ToolbarButton
+                        onClick={() => stopAnimation()} disabled={!isCurrentlyAnimating}
+                        label="Stop"
+                    >
                         <div className="i-mdi-stop text-stop"/>
                     </ToolbarButton>
                 </div>
                 {!isCurrentlyAnimating &&
                     <>
                         <div className="flex flex-wrap gap-2 justify-evenly">
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)}
+                                draggable
+                                label="Event"
+                            >
                                 <img className="entity" src={EventSvg}/>
                             </ToolbarButton>
 
                             <Divider orientation="vertical"/>
 
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)}
+                                draggable
+                                label="AND"
+                            >
                                 <img className="entity gate-img" src={AndSvg}/>
                             </ToolbarButton>
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)}
+                                draggable
+                                label="OR"
+                            >
                                 <OrIcon/>
                             </ToolbarButton>
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.XOR_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.XOR_NODE)}
+                                draggable
+                                label="XOR"
+                            >
                                 <XorIcon/>
                             </ToolbarButton>
 
                             <Divider orientation="vertical"/>
 
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.PAND_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.PAND_NODE)}
+                                draggable
+                                label="PAND"
+                            >
                                 <PAndIcon/>
                             </ToolbarButton>
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.FDEP_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.FDEP_NODE)}
+                                draggable
+                                label="FDEP"
+                            >
                                 <FdepIcon className="transform scale-40 min-w-28 border-4"/>
                             </ToolbarButton>
-                            <ToolbarButton onDragStart={(event) => onDragStart(event, NodeType.SPARE_NODE)} draggable>
+                            <ToolbarButton
+                                onDragStart={(event) => onDragStart(event, NodeType.SPARE_NODE)}
+                                draggable
+                                label="SPARE"
+                            >
                                 <SpareIcon className="transform scale-40 min-w-28 border-4"/>
                             </ToolbarButton>
                         </div>
