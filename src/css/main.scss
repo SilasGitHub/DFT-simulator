@@ -82,11 +82,11 @@ path.react-flow__edge-path:hover {
 
 /*highlight handles on hover*/
 .react-flow__handle-connecting {
-    @apply bg-connectable;
+    @apply bg-not-connectable;
 }
 
 .react-flow__handle-connecting.valid {
-    @apply bg-not-connectable;
+    @apply bg-connectable;
 }
 
 // display handle above background
