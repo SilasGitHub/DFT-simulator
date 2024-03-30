@@ -185,7 +185,7 @@ export default function Toolbar() {
                 <div className="flex w-59 justify-evenly">
                     <ToolbarButton
                         onClick={() => animationState === "playing" ? pauseAnimation() : startAnimation()}
-                        disabled={isPlayable}
+                        disabled={!isPlayable}
                         label={animationState === "playing" ? "Pause" : "Play"}
                     >
                         <div
