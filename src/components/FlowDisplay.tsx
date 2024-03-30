@@ -17,10 +17,12 @@ import {AnimationState, useDiagramStateStore} from "../stores/useDiagramStateSto
 import Topbar from "./Topbar.tsx"
 
 // do alphabe tletter based on number of event nodes
-const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+const ALPHABET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+const TIMEOUT = 1000
 
 let order = 1
 let localAnimationState: AnimationState = "stopped"
+let localAnimationSpeed = 1
 let toFailIds = new Array<string>()
 let activeTimeout: any = null
 
@@ -43,6 +45,7 @@ export default function FlowDisplay() {
         getChildren,
         getNodeById,
         onConnect,
+        animationSpeed,
     } = useDiagramStateStore()
 
     const onDragOver = React.useCallback((event: React.DragEvent) => {
@@ -135,7 +138,7 @@ export default function FlowDisplay() {
                                 activeTimeout = setTimeout(() => {
                                     activeTimeout = null
                                     doAnimate()
-                                }, 1000)
+                                }, TIMEOUT / localAnimationSpeed)
                                 return
                             } else {
                                 nextState = order++
@@ -153,7 +156,7 @@ export default function FlowDisplay() {
                             activeTimeout = setTimeout(() => {
                                 activeTimeout = null
                                 doAnimate()
-                            }, 1000)
+                            }, TIMEOUT / localAnimationSpeed)
                             return
                         }
                         nextState = 0
@@ -181,7 +184,7 @@ export default function FlowDisplay() {
                             activeTimeout = setTimeout(() => {
                                 activeTimeout = null
                                 doAnimate()
-                            }, 1000)
+                            }, TIMEOUT / localAnimationSpeed)
                             return
                         }
                         return
@@ -206,7 +209,7 @@ export default function FlowDisplay() {
         activeTimeout = setTimeout(() => {
             activeTimeout = null
             doAnimate()
-        }, 1000)
+        }, TIMEOUT / localAnimationSpeed)
     }, [selectedIds, resetAnimation, getNodeById, setNodes, nodes, getOutgoingNodesAndEdges, getChildren, getIncomingEdges])
 
     useEffect(() => {
@@ -225,6 +228,10 @@ export default function FlowDisplay() {
         },
         [animationState, doAnimate, nodes, selectedIds, setNodes],
     )
+
+    useEffect(() => {
+        localAnimationSpeed = animationSpeed
+    }, [animationSpeed])
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
             event.preventDefault()
@@ -252,7 +259,7 @@ export default function FlowDisplay() {
                 id: createNodeId(type),
                 type,
                 position,
-                data: {label: alphabet[nEventNodes % alphabet.length], failed: null},
+                data: {label: ALPHABET[nEventNodes % ALPHABET.length], failed: null},
                 selected: true,
             })
         },

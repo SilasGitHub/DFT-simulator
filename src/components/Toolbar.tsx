@@ -178,7 +178,7 @@ export default function Toolbar() {
             </aside>
             <aside
                 className={classNames(
-                    'bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2',
+                    'bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2 text-main',
                     isCurrentlyAnimating ? 'w-65' : 'w-[100%]'
                 )}
             >

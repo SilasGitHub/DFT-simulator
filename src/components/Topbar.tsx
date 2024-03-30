@@ -3,6 +3,7 @@ import TopbarButton from "./TopbarButton.tsx"
 import React, {useCallback} from "react"
 import {ReactFlowInstance, useReactFlow} from "reactflow"
 import {downloadFile} from "../utils/downloadFile.ts"
+import TopbarSpeedChanger from "./TopbarSpeedChanger.tsx"
 
 type TopBarProps = {
     reactFlowInstance: ReactFlowInstance | null
@@ -40,37 +41,43 @@ export default function Topbar({reactFlowInstance}: TopBarProps) {
 
     return (
         <div id="topbar"
-             className="flex items-center justify-start h-10 w-full bg-background-floating border-b-4 border-theme-border">
+             className="flex items-center justify-between h-10 w-full bg-background-floating border-b-4 border-theme-border text-main"
+        >
             {animationState === "stopped"
                 ? <>
-                    <input
-                        ref={loadDiagramInput}
-                        onChange={onFileChange}
-                        type="file"
-                        accept=".dfts"
-                        className="hidden"
-                    />
+                    <div className="flex h-full">
+                        <input
+                            ref={loadDiagramInput}
+                            onChange={onFileChange}
+                            type="file"
+                            accept=".dfts"
+                            className="hidden"
+                        />
 
-                    <TopbarButton
-                        onClick={restoreDiagram}
-                    >
-                        <div className="i-mdi-upload text-main"/>
-                    </TopbarButton>
-                    <TopbarButton
-                        onClick={saveDiagram}
-                    >
-                        <div className="i-mdi-content-save text-main"/>
-                    </TopbarButton>
-                    <TopbarButton
-                        onClick={clearDiagram}
-                    >
-                        <div className="i-mdi-delete text-stop"/>
-                    </TopbarButton>
+                        <TopbarButton
+                            onClick={restoreDiagram}
+                        >
+                            <div className="i-mdi-upload text-main"/>
+                        </TopbarButton>
+                        <TopbarButton
+                            onClick={saveDiagram}
+                        >
+                            <div className="i-mdi-content-save text-main"/>
+                        </TopbarButton>
+                        <TopbarButton
+                            onClick={clearDiagram}
+                        >
+                            <div className="i-mdi-delete text-stop"/>
+                        </TopbarButton>
+                    </div>
                 </>
-                : <>
-                    Animation is running
-                </>
+                : <div className="ml-4">
+                    Animation is running...
+                </div>
             }
+            <div className="flex h-full">
+                <TopbarSpeedChanger/>
+            </div>
         </div>
     )
 }

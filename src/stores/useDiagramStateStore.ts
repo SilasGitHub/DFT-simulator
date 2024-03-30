@@ -67,6 +67,8 @@ export type DiagramStateStore = {
     animationState: AnimationState
     isUiLocked: boolean
     setAnimationState: (animationState: AnimationState) => void
+    animationSpeed: number
+    setAnimationSpeed: (speed: number) => void
 };
 
 const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
@@ -171,12 +173,17 @@ export const useDiagramStateStore = create<DiagramStateStore>()(
                 animationState,
                 isUiLocked: animationState !== "stopped",
             }),
+            animationSpeed: 1,
+            setAnimationSpeed: (speed) => set({animationSpeed: speed}),
         }),
         {
             name: "diagram-state",
-            // merge: (persistedState, currentState) => {
-            //     return Object.assign(currentState, persistedState);
-            // },
+            merge: (persistedState, currentState) => {
+                for (const node of (persistedState as DiagramStateStore).nodes as NodeUnion[]) {
+                    node.data.failed = null
+                }
+                return Object.assign(currentState, persistedState);
+            },
         },
     ),
 )
