@@ -64,21 +64,22 @@ export type DiagramStateStore = {
 
 const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
 
+const initialNodes: Node[] = [
+    // initial system node
+    {
+        id: createNodeId(NodeType.SYSTEM_NODE),
+        data: {failed: null, label: "SYS"},
+        position: {x: screenCenter.x - 25, y: screenCenter.y - 25},
+        selectable: false,
+        type: NodeType.SYSTEM_NODE,
+    } as NodeUnion,
+]
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
 export const useDiagramStateStore = create<DiagramStateStore>()(
     persist(
         (set, get) => ({
-            nodes: [
-                // initial system node
-                {
-                    id: createNodeId(NodeType.SYSTEM_NODE),
-                    data: {failed: null, label: "SYS"},
-                    position: {x: screenCenter.x - 25, y: screenCenter.y - 25},
-                    selectable: false,
-                    type: NodeType.SYSTEM_NODE,
-                } as NodeUnion,
-            ],
+            nodes: initialNodes,
             edges: [],
             onNodesChange: (changes: NodeChange[]) => set({nodes: applyNodeChanges(changes, get().nodes)}),
             onEdgesChange: (changes: EdgeChange[]) => set({edges: applyEdgeChanges(changes, get().edges)}),
@@ -95,7 +96,7 @@ export const useDiagramStateStore = create<DiagramStateStore>()(
             clearDiagram: () => {
                 if (confirm("Are you sure you want to clear the diagram?")) {
                     set({
-                        nodes: [],
+                        nodes: initialNodes,
                         edges: [],
                         selectedIds: [],
                     })
