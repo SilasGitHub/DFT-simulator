@@ -14,7 +14,7 @@ export default function EventIcon({
     )
     return (
         <div className={combinedClassName}>
-            <p>{label || "E"}</p>
+            <p>{label || "BE"}</p>
         </div>
     )
 }
