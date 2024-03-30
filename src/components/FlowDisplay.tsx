@@ -1,4 +1,4 @@
-import React, {useEffect} from "react"
+import React, {useCallback, useEffect} from "react"
 import ReactFlow, {
     addEdge,
     Background,
@@ -8,10 +8,13 @@ import ReactFlow, {
     Edge,
     MiniMap,
     Node,
+    Panel,
     ReactFlowInstance,
     useEdgesState,
     useNodesState,
+	useReactFlow,
 } from "reactflow"
+import Dagre from '@dagrejs/dagre';
 import "reactflow/dist/style.css"
 import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {useNodeUtils} from "../utils/useNodeUtils.tsx"
@@ -40,6 +43,26 @@ interface FlowDisplayProps {
 
 let running = false
 
+const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
+const getLayoutedElements = (nodes : Node[], edges : Edge[], options: { direction: any; }) => {
+  g.setGraph({ rankdir: options.direction, ranker: "tight-tree" });
+
+  edges.forEach((edge) => g.setEdge(edge.source, edge.target));
+  nodes.forEach((node) => g.setNode(node.id, node as any));
+
+  Dagre.layout(g);
+
+  return {
+    nodes: nodes.map((node) => {
+      const { x, y } = g.node(node.id);
+
+      return { ...node, position: { x, y } };
+    }),
+    edges,
+  };
+};
+
 export default function FlowDisplay(props: FlowDisplayProps) {
     const reactFlowWrapper = React.useRef(null)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
@@ -47,6 +70,8 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
     const [disabled, setDisabled] = React.useState(false)
     const {getIncomingEdges, getOutgoingNodesAndEdges, getChildren, getNodeById} = useNodeUtils(nodes, edges)
+	const { fitView } = useReactFlow();
+
 
     let toFail = new Array<string>()
 
@@ -295,6 +320,20 @@ export default function FlowDisplay(props: FlowDisplayProps) {
 		props.setSelected(props.selected.filter(id => !deleted.map(node => node.id).includes(id)));
 		};
 
+	const onLayout = useCallback(
+		(direction) => {
+			const layouted = getLayoutedElements(nodes, edges, { direction });
+	
+			setNodes([...layouted.nodes]);
+			setEdges([...layouted.edges]);
+	
+			window.requestAnimationFrame(() => {
+			fitView();
+			});
+		},
+		[nodes, edges]
+		);
+
     return (
         <div className="reactflow-wrapper" ref={reactFlowWrapper}>
             <ReactFlow
@@ -316,11 +355,15 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 nodesConnectable={!disabled}
                 nodesFocusable={!disabled}
                 elementsSelectable={!disabled}
+				fitView
             >
                 <Controls/>
                 <MiniMap/>
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
             </ReactFlow>
+			<Panel position="top-right">
+        <button onClick={() => onLayout('BT')}>vertical layout</button>
+      </Panel>
         </div>
     )
 }
