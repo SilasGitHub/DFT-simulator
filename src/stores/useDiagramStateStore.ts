@@ -3,7 +3,6 @@ import {
     Connection,
     Edge,
     EdgeChange,
-    Node,
     NodeChange,
     addEdge,
     OnNodesChange,
@@ -21,17 +20,9 @@ import {createNodeId, parseHandleId} from "../utils/idParser.ts"
 import {NodeUnion} from "../components/nodes/Nodes.ts"
 import {persist} from "zustand/middleware"
 
+// for some reason NodeType is undefined when importing :(
 enum NodeType {
     SYSTEM_NODE = "SYSTEM_NODE",
-    EVENT_NODE = "EVENT_NODE",
-
-    AND_NODE = "AND_NODE",
-    OR_NODE = "OR_NODE",
-    XOR_NODE = "XOR_NODE",
-
-    PAND_NODE = "PAND_NODE",
-    FDEP_NODE = "FDEP_NODE",
-    SPARE_NODE = "SPARE_NODE",
 }
 
 type DiagramStateStore = {
