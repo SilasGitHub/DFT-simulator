@@ -123,7 +123,7 @@ export default function Toolbar() {
     }, [animationState])
 
     return (
-        <div id="toolbar" className="fixed z-10 bottom-0 p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-[100vw] pointer-events-none">
+        <div id="toolbar" className="p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-full pointer-events-none">
             <aside
                 className="w-65 h-auto bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
             >
