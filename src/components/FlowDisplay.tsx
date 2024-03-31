@@ -1,4 +1,4 @@
-import React, {useEffect} from "react"
+import React, {useCallback, useEffect} from "react"
 import ReactFlow, {
     Background,
     BackgroundVariant,
@@ -7,8 +7,11 @@ import ReactFlow, {
     Edge,
     MiniMap,
     Node,
+    Panel,
     ReactFlowInstance,
+    useReactFlow,
 } from "reactflow"
+import Dagre from "@dagrejs/dagre"
 import "reactflow/dist/style.css"
 import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
@@ -27,11 +30,32 @@ let localAnimationSpeed = 1
 let toFailIds = new Array<string>()
 let activeTimeout: any = null
 
+const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}))
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], options: { direction: string; }) => {
+    g.setGraph({rankdir: options.direction, ranker: "tight-tree"})
+
+    edges.forEach((edge) => g.setEdge(edge.source, edge.target))
+    nodes.forEach((node) => g.setNode(node.id, node as NodeUnion))
+
+    Dagre.layout(g)
+
+    return {
+        nodes: nodes.map((node) => {
+            const {x, y} = g.node(node.id)
+
+            return {...node, position: {x, y}}
+        }) as NodeUnion[],
+        edges,
+    }
+}
+
 export default function FlowDisplay() {
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
     const {
         nodes,
         setNodes,
+        setEdges,
         onNodesChange,
         edges,
         addNode,
@@ -54,6 +78,7 @@ export default function FlowDisplay() {
         setNodeBeingUsedBy,
         getNodeBeingUsedBy,
     } = useDiagramAnimationStore()
+    const {fitView} = useReactFlow()
 
     const onDragOver = React.useCallback((event: React.DragEvent) => {
         event.preventDefault()
@@ -310,6 +335,19 @@ export default function FlowDisplay() {
         removeSelectedToFailIds(deleted.map(node => node.id))
     }
 
+    const onLayout = useCallback((direction: string) => {
+            const layouted = getLayoutedElements(nodes, edges, {direction})
+
+            setNodes((_) => [...layouted.nodes])
+            setEdges((_) => [...layouted.edges])
+
+            window.requestAnimationFrame(() => {
+                fitView()
+            })
+        },
+        [nodes, edges],
+    )
+
     return (
         <div className="h-full flex-grow">
             <Topbar reactFlowInstance={reactFlowInstance}/>
@@ -332,6 +370,7 @@ export default function FlowDisplay() {
                 nodesConnectable={!isUiLocked}
                 nodesFocusable={!isUiLocked}
                 elementsSelectable={!isUiLocked}
+                fitView
             >
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1.2}/>
                 <Controls
@@ -345,6 +384,9 @@ export default function FlowDisplay() {
                 />
                 <Toolbar/>
             </ReactFlow>
+            <Panel position="top-right">
+                <button onClick={() => onLayout("BT")}>vertical layout</button>
+            </Panel>
         </div>
     )
 }
