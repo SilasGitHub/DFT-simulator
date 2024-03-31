@@ -12,6 +12,10 @@ export default function TopbarSpeedChanger({
         return 0.5 < animationSpeed
     }, [animationSpeed])
 
+    const canIncrease = React.useMemo(() => {
+        return 8 > animationSpeed
+    }, [animationSpeed])
+
     return (
         <div
             {...rest}
@@ -36,7 +40,11 @@ export default function TopbarSpeedChanger({
                 </div>
             </div>
             <button
-                className="hover:shadow-md shadow-gray-300 bg-white font-bold p-1.5 aspect-square text-2xl transition duration-150 cursor-pointer flex items-center justify-center bg-white w-10 h-full"
+                className={classNames(
+                    "hover:shadow-md shadow-gray-300 bg-white font-bold p-1.5 aspect-square text-2xl transition duration-150 cursor-pointer flex items-center justify-center bg-white w-10 h-full",
+                    canIncrease ? "" : "disabled",
+                )}
+                disabled={!canIncrease}
                 onClick={() => {
                     setAnimationSpeed(animationSpeed + 0.5)
                 }}
