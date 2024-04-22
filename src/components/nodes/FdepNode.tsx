@@ -3,18 +3,20 @@ import CustomHandle from "../CustomHandle"
 import {FdepNodeData, NodeType} from "./Nodes"
 import {useDynamicHandles} from "../../utils/useDynamicHandles.tsx"
 import {createHandleId} from "../../utils/idParser.ts"
+import FdepIcon from "../node-icons/FdepIcon.tsx"
+import {useDiagramAnimationStore} from "../../stores/useDiagramAnimationStore.ts"
 
-export default function FDEPNode({id, data, }: NodeProps<FdepNodeData>) {
-    const color = data.failed !== null ? (data.failed ? "red" : "green") : ""
-
+export default function FDEPNode({id, data}: NodeProps<FdepNodeData>) {
     // dynamically create more handles
     const connectedSources = useDynamicHandles(id, "dependent")
     const nHandles = Math.max(connectedSources.length + 1, 1)
     const spacing = 80 / (nHandles + 1)
 
+    const {getNodeFailState} = useDiagramAnimationStore()
+    const failed = getNodeFailState(id)
+
     return (
-        <div className="entity spare" style={{backgroundColor: color, justifyContent: "flex-end"}}>
-            {/*<CustomHandle type="source" position={Position.Top} id="a" isConnectable={1}/>*/}
+        <div>
             <CustomHandle
                 type="target"
                 position={Position.Left}
@@ -41,9 +43,8 @@ export default function FDEPNode({id, data, }: NodeProps<FdepNodeData>) {
                 />
             ))}
 
-            <p>FDEP</p>
-            <div style={{borderTop: "2px solid black"}}>
-                <div className="arrow-right"></div>
+            <div className="entity">
+                <FdepIcon label={data.label} failed={failed}/>
             </div>
         </div>
     )

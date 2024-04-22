@@ -6,12 +6,11 @@ import {
     HandleProps,
     ReactFlowState,
     useNodeId,
-    useNodes,
     useStore,
 } from "reactflow"
-import {useNodeUtils} from "../utils/useNodeUtils.tsx"
 import {parseHandleId} from "../utils/idParser.ts"
 import {handleRestrictionsMap, NodeType} from "./nodes/Nodes.ts"
+import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
 
 // Taken from: https://reactflow.dev/examples/nodes/connection-limit
 
@@ -23,9 +22,8 @@ type CustomHandleProps = {
 
 export default function CustomHandle({isConnectable, ...rest}: CustomHandleProps) {
     const {edges} = useStore(selector)
-    const {getNodeById, getOutgoingNodesAndEdges} = useNodeUtils(useNodes(), edges)
+    const {getNodeById, getOutgoingNodesAndEdges} = useDiagramStateStore()
     const nodeId = useNodeId()
-
 
     const isHandleConnectable = useMemo(() => {
         if (!nodeId) return false

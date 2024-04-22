@@ -1,6 +1,5 @@
-import React, {useCallback, useEffect} from "react"
+import React, {useEffect} from "react"
 import ReactFlow, {
-    addEdge,
     Background,
     BackgroundVariant,
     Connection,
@@ -10,76 +9,52 @@ import ReactFlow, {
     Node,
     Panel,
     ReactFlowInstance,
-    useEdgesState,
-    useNodesState,
-	useReactFlow,
 } from "reactflow"
-import Dagre from '@dagrejs/dagre';
 import "reactflow/dist/style.css"
 import {EventNodeType, nodeElementsMap, NodeType, NodeUnion} from "./nodes/Nodes.ts"
-import {useNodeUtils} from "../utils/useNodeUtils.tsx"
 import {createNodeId, parseHandleId} from "../utils/idParser.ts"
+import Toolbar from "./Toolbar.tsx"
+import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
+import Topbar from "./Topbar.tsx"
+import {AnimationState, useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
 
-const screenCenter = {x: window.innerWidth / 2, y: window.innerHeight / 2}
-
-const initialNodes: NodeUnion[] = [
-    {id: createNodeId(NodeType.SYSTEM_NODE, "SYS"), data: {failed: null, label: "SYS"}, position: {x: screenCenter.x - 25, y: screenCenter.y - 25}, selectable: false, type: NodeType.SYSTEM_NODE},
-]
-
-const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+// do alphabe tletter based on number of event nodes
+const ALPHABET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+const TIMEOUT = 1000
 
 let order = 1
-const idMapper = new Map<string, number>();
-function getId(type : string) {
-	idMapper.set(type, idMapper.has(type) ? (idMapper.get(type) as number) + 1 : 0);
-	return `${type}_${idMapper.get(type)}`
-}
+let localAnimationState: AnimationState = "stopped"
+let localAnimationSpeed = 1
+let toFailIds = new Array<string>()
+let activeTimeout: any = null
 
-interface FlowDisplayProps {
-    selected: Array<string>,
-    setSelected: React.Dispatch<React.SetStateAction<string[]>>
-    currentlyAnimating: boolean,
-}
-
-let running = false
-
-const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-
-const getLayoutedElements = (nodes : Node[], edges : Edge[], options: { direction: any; }) => {
-  g.setGraph({ rankdir: options.direction, ranker: "tight-tree" });
-
-  edges.forEach((edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node) => g.setNode(node.id, node as any));
-
-  Dagre.layout(g);
-
-  return {
-    nodes: nodes.map((node) => {
-      const { x, y } = g.node(node.id);
-
-      return { ...node, position: { x, y } };
-    }),
-    edges,
-  };
-};
-
-export default function FlowDisplay(props: FlowDisplayProps) {
-    const reactFlowWrapper = React.useRef(null)
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-    const [edges, setEdges, onEdgesChange] = useEdgesState([])
+export default function FlowDisplay() {
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null as null | ReactFlowInstance)
-    const [disabled, setDisabled] = React.useState(false)
-    const {getIncomingEdges, getOutgoingNodesAndEdges, getChildren, getNodeById} = useNodeUtils(nodes, edges)
-	const { fitView } = useReactFlow();
-
-
-    let toFail = new Array<string>()
-
-    React.useCallback(() => {
-    }, [nodes])
-    const onConnect = React.useCallback((connection: Connection) => {
-        setEdges((eds) => addEdge(connection, eds))
-    }, [])
+    const {
+        nodes,
+        setNodes,
+        onNodesChange,
+        edges,
+        addNode,
+        onEdgesChange,
+        getIncomingEdges,
+        getOutgoingNodesAndEdges,
+        getChildren,
+        getNodeById,
+        onConnect,
+        animationSpeed,
+    } = useDiagramStateStore()
+    const {
+        addSelectedToFailIds,
+        animationState,
+        removeSelectedToFailIds,
+        getNodeFailState,
+        selectedToFailIds,
+        isUiLocked,
+        setNodeFailState,
+        setNodeBeingUsedBy,
+        getNodeBeingUsedBy,
+    } = useDiagramAnimationStore()
 
     const onDragOver = React.useCallback((event: React.DragEvent) => {
         event.preventDefault()
@@ -87,152 +62,181 @@ export default function FlowDisplay(props: FlowDisplayProps) {
     }, [])
 
     const resetAnimation = React.useCallback(() => {
-        setNodes(nodes.map(node => {
-            if ((node as NodeUnion).type === NodeType.EVENT_NODE && node.data.isSpare) {
-                node.data.failed = null
-                node.data.beingUsedBy = null
+        setNodes((nds) => nds.map(node => {
+            if (node.type === NodeType.EVENT_NODE && node.data.isSpare) {
+                setNodeFailState(node.id, null)
+                setNodeBeingUsedBy(node.id, null)
             } else {
-                node.data.failed = 0
+                setNodeFailState(node.id, 0)
             }
-			node.selected = false;
+            node.selected = false
             return node
         }))
-    }, [nodes, setNodes])
+    }, [setNodes])
 
     const doAnimate = React.useCallback(() => {
-        if (!running) {
-            toFail = [];
-            return;
-        }
-
-		if (toFail.length === 0) {
-			toFail = [...props.selected];
-			resetAnimation();
-		} else {
-			const nodeName = toFail.shift();
-			const node = getNodeById(nodeName)!
-			let nextState : number;
-			switch (node.type) {
-				case (NodeType.SYSTEM_NODE) : {
-					const children = getChildren(node);
-					nextState = children.some(child => child.data.failed) ? order++ : 0;
-					break;
-				}
-				case (NodeType.EVENT_NODE) : {
-					nextState = order++;
-					break;
-				}
-				case (NodeType.AND_NODE) : {
-					const children = getChildren(node);
-					nextState = children.every(child => child.data.failed) ? order++ : 0;
-					break;
-				}
-				case (NodeType.OR_NODE) : {
-					const children = getChildren(node);
-					nextState = children.some(child => child.data.failed) ? order++ : 0;
-					break;
-				}
-				case (NodeType.XOR_NODE) : {
-					const children = getChildren(node);
-					const failedChildIndex = children.findIndex(child => child.data.failed);
-					children.splice(failedChildIndex, 1);
-					nextState = (failedChildIndex >= 0 && children.findIndex(child => child.data.failed) === -1) ? order++ : 0;
-					break;
-				}
-				case (NodeType.PAND_NODE) : {
-					const children = getChildren(node);
-					const failedList = children.map(child => {return child.data.failed})
-					nextState = failedList.every(function (x, i) { return x > 0 && (i === 0 || x >= failedList[i - 1]); }) ? order++ : 0;
-					break;
-				}
-				case (NodeType.SPARE_NODE) : {
-					const incomingEdges = getIncomingEdges(node);
-					const primaryNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("primary"))?.source
-					const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as Node;
-					const spareNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("spare")).map(edge => edge.source);
-					const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as Node);
-					const currentSpare = spareNodes.find(spare => spare.data.beingUsedBy === node.id && spare.data.failed === 0);
-					if (primaryNode.data.failed) {
-						if (!currentSpare) {
-							const inactiveSpare = spareNodes.find(node => node.data.failed === null);
-							if (inactiveSpare) {
-								inactiveSpare.data.beingUsedBy = node.id;
-								inactiveSpare.data.failed = 0;
-								setNodes(nodes.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd));
-								return setTimeout(() => { doAnimate(); }, 1000) ;
-							} else {
-								nextState = order++;
-								break;
-							}
-						} else {
-							nextState = 0;
-							break;
-						}
-					} else {
-						if (currentSpare) {
-							currentSpare.data.beingUsedBy === null;
-							currentSpare.data.failed = null;
-							setNodes(nodes.map(nd => nd.id === currentSpare.id ? currentSpare : nd));
-							return setTimeout(() => { doAnimate(); }, 1000) ;
-						}
-						nextState = 0; 
-						break;
-					}
-				}
-				case (NodeType.FDEP_NODE) : {
-					const incomingEdges = getIncomingEdges(node);
-					const triggerNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("trigger"))?.source
-					const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as Node;
-					const dependentNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("dependent")).map(edge => edge.source);
-					const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as Node);
-					nextState = triggerNode.data.failed ? order++ : 0;
-					if (triggerNode.data.failed) {
-						if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
-							return doAnimate();
-						}
-						setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
-						const dependentNodesToFail = dependentNodes.filter(node => !node.data.failed);
-						if (dependentNodesToFail.length > 0) {
-							toFail = dependentNodesToFail.map(node => node.id).concat(toFail);
-							return setTimeout(() => { doAnimate(); }, 1000) ;
-						}
-						return;
-					}
-					break;
-				}
-				default : {
-					return;
-				}
-			}
-			if ((nextState > 0 && node.data.failed as number > 0) || nextState === node.data.failed) {
-				return doAnimate();
-			}
-			setNodes(nodes.map(nd => {nd.data.failed = nd === node ? nextState : nd.data.failed; return nd;}))
-			const {outgoingNodes} = getOutgoingNodesAndEdges(node);
-			toFail = outgoingNodes.map(node => node.id).concat(toFail);
-		}
-        setTimeout(() => {
-            doAnimate()
-        }, 1000)
-    }, [running, nodes, edges, props.selected])
-
-    useEffect(() => {
-        running = props.currentlyAnimating
-
-        //Disable/enable interaction with the FlowDisplay
-        setDisabled(running)
-        if (!running) {
-            setNodes(nodes.map(node => {
-                node.data.failed = props.selected.includes(node.id) ? 1 : null
-                return node
-            }))
+        if (activeTimeout) {
             return
         }
-        if (running) {
-            doAnimate()
+        if (localAnimationState !== "playing") {
+            if (localAnimationState === "stopped") {
+                toFailIds = []
+            }
+            return
         }
-    }, [props.currentlyAnimating])
 
+        if (toFailIds.length === 0) {
+            toFailIds = [...selectedToFailIds]
+            resetAnimation()
+        } else {
+            const nodeName = toFailIds.shift()
+            const node = getNodeById(nodeName)!
+            let nextState: number
+            switch (node.type) {
+                case (NodeType.SYSTEM_NODE) : {
+                    const children = getChildren(node)
+                    nextState = children.some(child => getNodeFailState(child.id)) ? order++ : 0
+                    break
+                }
+                case (NodeType.EVENT_NODE) : {
+                    nextState = order++
+                    break
+                }
+                case (NodeType.AND_NODE) : {
+                    const children = getChildren(node)
+                    nextState = children.every(child => getNodeFailState(child.id)) ? order++ : 0
+                    break
+                }
+                case (NodeType.OR_NODE) : {
+                    const children = getChildren(node)
+                    nextState = children.some(child => getNodeFailState(child.id)) ? order++ : 0
+                    break
+                }
+                case (NodeType.XOR_NODE) : {
+                    const children = getChildren(node)
+                    const failedChildIndex = children.findIndex(child => getNodeFailState(child.id))
+                    children.splice(failedChildIndex, 1)
+                    nextState = (failedChildIndex >= 0 && children.findIndex(child => getNodeFailState(child.id)) === -1) ? order++ : 0
+                    break
+                }
+                case (NodeType.PAND_NODE) : {
+                    const children = getChildren(node)
+                    const failedList = children.map(child => getNodeFailState(child.id))
+                    nextState = failedList.every(function (x, i) {
+                        return x !== null && x > 0 && (i === 0 || x >= (failedList[i - 1] ?? 0))
+                    })
+                        ? order++
+                        : 0
+                    break
+                }
+                case (NodeType.SPARE_NODE) : {
+                    const incomingEdges = getIncomingEdges(node)
+                    const primaryNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("primary"))?.source
+                    const primaryNode = nodes.find(nd => primaryNodeName === nd.id) as EventNodeType
+                    const spareNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("spare")).map(edge => edge.source)
+                    const spareNodes = spareNodeNames.map(name => nodes.find(node => node.id === name) as EventNodeType)
+                    const currentSpare = spareNodes.find(spare => getNodeBeingUsedBy(spare.id) === node.id && getNodeFailState(spare.id) === 0)
+                    if (getNodeFailState(primaryNode.id)) {
+                        if (!currentSpare) {
+                            const inactiveSpare = spareNodes.find(node => getNodeFailState(node.id) === null)
+                            if (inactiveSpare) {
+                                setNodeBeingUsedBy(inactiveSpare.id, node.id)
+                                setNodeFailState(inactiveSpare.id, 0)
+                                setNodes((nds) => nds.map(nd => nd.id === inactiveSpare.id ? inactiveSpare : nd) as NodeUnion[])
+                                activeTimeout = setTimeout(() => {
+                                    activeTimeout = null
+                                    doAnimate()
+                                }, TIMEOUT / localAnimationSpeed)
+                                return
+                            } else {
+                                nextState = order++
+                                break
+                            }
+                        } else {
+                            nextState = 0
+                            break
+                        }
+                    } else {
+                        if (currentSpare) {
+                            setNodeBeingUsedBy(currentSpare.id, null)
+                            setNodeFailState(currentSpare.id, null)
+                            setNodes((nds) => nds.map(nd => nd.id === currentSpare.id ? currentSpare : nd) as NodeUnion[])
+                            activeTimeout = setTimeout(() => {
+                                activeTimeout = null
+                                doAnimate()
+                            }, TIMEOUT / localAnimationSpeed)
+                            return
+                        }
+                        nextState = 0
+                        break
+                    }
+                }
+                case (NodeType.FDEP_NODE) : {
+                    const incomingEdges = getIncomingEdges(node)
+                    const triggerNodeName = incomingEdges.find(edge => edge.targetHandle?.includes("trigger"))?.source
+                    const triggerNode = nodes.find(nd => triggerNodeName === nd.id) as NodeUnion
+                    const dependentNodeNames = incomingEdges.filter(edge => edge.targetHandle?.includes("dependent")).map(edge => edge.source)
+                    const dependentNodes = dependentNodeNames.map(name => nodes.find(node => node.id === name) as EventNodeType)
+                    nextState = getNodeFailState(triggerNode.id) ? order++ : 0
+                    if (getNodeFailState(triggerNode.id)) {
+                        if ((nextState > 0 && getNodeFailState(node.id) as number > 0) || nextState === getNodeFailState(node.id)) {
+                            return doAnimate()
+                        }
+                        for (const nd of nodes) {
+                            setNodeFailState(nd.id, nd === node ? nextState : getNodeFailState(nd.id))
+                        }
+                        const dependentNodesToFail = dependentNodes.filter(node => !getNodeFailState(node.id))
+                        if (dependentNodesToFail.length > 0) {
+                            toFailIds = dependentNodesToFail.map(node => node.id).concat(toFailIds)
+                            activeTimeout = setTimeout(() => {
+                                activeTimeout = null
+                                doAnimate()
+                            }, TIMEOUT / localAnimationSpeed)
+                            return
+                        }
+                        return
+                    }
+                    break
+                }
+                default : {
+                    return
+                }
+            }
+            if ((nextState > 0 && getNodeFailState(node.id) as number > 0) || nextState === getNodeFailState(node.id)) {
+                return doAnimate()
+            }
+            for (const nd of nodes) {
+                setNodeFailState(nd.id, nd === node ? nextState : getNodeFailState(nd.id))
+            }
+            const {outgoingNodes} = getOutgoingNodesAndEdges(node)
+            toFailIds = outgoingNodes.map(node => node.id).concat(toFailIds)
+        }
+
+        activeTimeout = setTimeout(() => {
+            activeTimeout = null
+            doAnimate()
+        }, TIMEOUT / localAnimationSpeed)
+    }, [selectedToFailIds, resetAnimation, getNodeById, setNodes, nodes, getOutgoingNodesAndEdges, getChildren, getIncomingEdges])
+
+    useEffect(() => {
+            const lastAnimationState = localAnimationState
+            localAnimationState = animationState
+
+            if (lastAnimationState !== "stopped" && localAnimationState === "stopped") {
+                for (const node of nodes) {
+                    setNodeFailState(node.id, selectedToFailIds.includes(node.id) ? 1 : null)
+                }
+                return
+            } else if (localAnimationState === "playing") {
+                doAnimate()
+            }
+        },
+        [animationState, doAnimate, nodes, selectedToFailIds, setNodes],
+    )
+
+    useEffect(() => {
+        localAnimationSpeed = animationSpeed
+    }, [animationSpeed])
 
     const onDrop = React.useCallback((event: React.DragEvent) => {
             event.preventDefault()
@@ -240,31 +244,31 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 return
             }
 
-            const type = event.dataTransfer.getData("application/reactflow")
-
-            // check if the dropped element is valid
+            const type = event.dataTransfer.getData("application/reactflow") as NodeType
             if (typeof type === "undefined" || !type) {
                 return
             }
-            // reactFlowInstance.project was renamed to reactFlowInstance.screenToFlowPosition
-            // and you don't need to subtract the reactFlowBounds.left/top anymore
-            // details: https://reactflow.dev/whats-new/2023-11-10
+
             const position = reactFlowInstance.screenToFlowPosition({
                 x: event.clientX,
                 y: event.clientY,
             })
-			
-            const newNode = {
-                id: getId(type),
+            const nEventNodes = nodes.reduce((acc, node) => {
+                if (node.type === NodeType.EVENT_NODE) {
+                    return acc + 1
+                }
+                return acc
+            }, 0)
+
+            addNode({
+                id: createNodeId(type),
                 type,
                 position,
-                data: {label: `${alphabet[idMapper.get(type) as number % alphabet.length]}`, failed: null},
-				selected: true,
-            } as EventNodeType
-
-            setNodes((nds) => nds.map(nd => { nd.selected = false; return nd; }).concat(newNode))
+                data: {label: ALPHABET[nEventNodes % ALPHABET.length]},
+                selected: true,
+            } as NodeUnion)
         },
-        [reactFlowInstance],
+        [addNode, nodes, reactFlowInstance],
     )
 
     const onConnectWrap = (connection: Connection) => {
@@ -272,71 +276,48 @@ export default function FlowDisplay(props: FlowDisplayProps) {
         const {handleType} = parseHandleId(connection.targetHandle)
         if (handleType === "spare" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = true
-            setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node) as NodeUnion[])
         } else if (handleType !== "dependent" && sourceNode.type === NodeType.EVENT_NODE) {
             sourceNode.data.isSpare = false
-            setNodes(nodes.map(node => node.id === sourceNode.id ? sourceNode : node))
+            setNodes((nds) => nds.map(node => node.id === sourceNode.id ? sourceNode : node) as NodeUnion[])
         }
         onConnect(connection)
-        // doUpdateFail(Date.now())
     }
 
     const onNodeClick = (_: React.MouseEvent, node: Node) => {
-        if (props.currentlyAnimating || node.type !== NodeType.EVENT_NODE) {
+        if (animationState !== "stopped" || node.type !== NodeType.EVENT_NODE) {
             return
         }
 
         // If we double click on a basic event node, select or unselect it from the list of events to fail
-        if (props.selected.includes(node.id)) {
-            props.setSelected(props.selected.filter((id) => id !== node.id))
+        if (selectedToFailIds.includes(node.id)) {
+            removeSelectedToFailIds([node.id])
         } else {
-            props.setSelected(props.selected.concat([node.id]))
+            addSelectedToFailIds([node.id])
         }
 
         // Highlight the selected basic event by changing it's internal state to 'failed' which will update it's background color
-        setNodes((nds) => {
-            //doUpdateFail(Date.now());
-            return nds.map((nd) => {
-                if (nd.id === node.id) {
-                    nd.data = {
-                        ...nd.data,
-                        failed: nd.data.failed === null ? 1 : null,
-                    }
-                }
-                return nd
-            })
-        })
-
+        setNodeFailState(node.id, getNodeFailState(node.id) === null ? 1 : null)
     }
 
-	const onEdgesDelete = (deleted : Edge[]) => {
-		props.setSelected(props.selected.filter(id => !deleted.map(edge => edge.id).includes(id)));
-	}
+    const onEdgesDelete = (deleted: Edge[]) => {
+        removeSelectedToFailIds(deleted.map(edge => edge.id))
+    }
 
-	const onNodesDelete = (deleted : Node[]) => {
-		// let connectedEdges = new Array<Edge>();
-		// deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
-		// const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
-		props.setSelected(props.selected.filter(id => !deleted.map(node => node.id).includes(id)));
-		};
+    const onNodesDelete = (deleted: Node[]) => {
+        // let connectedEdges = new Array<Edge>();
+        // deleted.forEach(node => connectedEdges = connectedEdges.concat(edges.filter(edge => edge.source === node.id || edge.target === node.id)));
+        // const deletedIds = connectedEdges.map(edge => edge.id).concat(deleted.map(node => node.id));
+        removeSelectedToFailIds(deleted.map(node => node.id))
+    }
 
-	const onLayout = useCallback(
-		(direction) => {
-			const layouted = getLayoutedElements(nodes, edges, { direction });
-	
-			setNodes([...layouted.nodes]);
-			setEdges([...layouted.edges]);
-	
-			window.requestAnimationFrame(() => {
-			fitView();
-			});
-		},
-		[nodes, edges]
-		);
+
 
     return (
-        <div className="reactflow-wrapper" ref={reactFlowWrapper}>
+        <div className="h-full flex flex-col">
+            <Topbar reactFlowInstance={reactFlowInstance}/>
             <ReactFlow
+                className="flex-grow"
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeElementsMap}
@@ -344,26 +325,34 @@ export default function FlowDisplay(props: FlowDisplayProps) {
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}
                 onNodesChange={onNodesChange}
-				onNodesDelete={onNodesDelete}
+                onNodesDelete={onNodesDelete}
                 onEdgesChange={onEdgesChange}
-				onEdgesDelete={onEdgesDelete}
+                onEdgesDelete={onEdgesDelete}
                 onConnect={onConnectWrap}
                 onNodeClick={onNodeClick}
-                edgesUpdatable={!disabled}
-                edgesFocusable={!disabled}
-                nodesDraggable={!disabled}
-                nodesConnectable={!disabled}
-                nodesFocusable={!disabled}
-                elementsSelectable={!disabled}
-				fitView
+                edgesUpdatable={!isUiLocked}
+                edgesFocusable={!isUiLocked}
+                nodesDraggable={!isUiLocked}
+                nodesConnectable={!isUiLocked}
+                nodesFocusable={!isUiLocked}
+                elementsSelectable={!isUiLocked}
+                fitView
             >
-                <Controls/>
-                <MiniMap/>
-                <Background variant={BackgroundVariant.Dots} gap={12} size={1}/>
+                <Background variant={BackgroundVariant.Dots} gap={12} size={1.2}/>
+                <Controls
+                    position="top-left"
+                    showInteractive={true}
+                    className="rounded-lg shadow-md overflow-hidden border-4 border-theme-border bg-background-floating"
+                />
+                <MiniMap
+                    position="top-right"
+                    className="rounded-2xl shadow-md overflow-hidden border-4 border-theme-border bg-background-floating"
+                />
+                <Panel position="bottom-center" className="w-full m-0 z-10 !pointer-events-none">
+                    {/*z-10 to stay above reactflow ad*/}
+                    <Toolbar/>
+                </Panel>
             </ReactFlow>
-			<Panel position="top-right">
-        <button onClick={() => onLayout('BT')}>vertical layout</button>
-      </Panel>
         </div>
     )
 }
