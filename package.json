@@ -10,21 +10,31 @@
     "preview": "vite preview"
   },
   "dependencies": {
-	"@dagrejs/dagre": "^1.1.1",
+    "@dagrejs/dagre": "^1.1.1",
+    "@unocss/reset": "^0.58.6",
+    "classnames": "^2.5.1",
     "react": "^18.2.0",
+    "react-dnd": "^16.0.1",
     "react-dom": "^18.2.0",
-    "reactflow": "^11.10.4"
+    "reactflow": "^11.10.4",
+    "uuid": "^9.0.1",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.1.64",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
+    "@unocss/preset-icons": "^0.58.6",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "sass": "^1.72.0",
     "typescript": "^5.2.2",
+    "unocss": "^0.58.6",
     "vite": "^5.1.6"
   }
 }
