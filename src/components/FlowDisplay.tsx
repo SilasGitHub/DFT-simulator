@@ -7,7 +7,6 @@ import ReactFlow, {
     Edge,
     MiniMap,
     Node,
-    Panel,
     ReactFlowInstance,
 } from "reactflow"
 import "reactflow/dist/style.css"
@@ -348,10 +347,7 @@ export default function FlowDisplay() {
                     position="top-right"
                     className="rounded-2xl shadow-md overflow-hidden border-4 border-theme-border bg-background-floating"
                 />
-                <Panel position="bottom-center" className="w-full m-0 z-10 !pointer-events-none">
-                    {/*z-10 to stay above reactflow ad*/}
-                    <Toolbar/>
-                </Panel>
+                <Toolbar/>
             </ReactFlow>
         </div>
     )
