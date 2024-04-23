@@ -1,5 +1,8 @@
 name: Deploy Docs
-on: [push, pull_request]
+on:
+    push:
+        branches:
+        - main
 permissions:
   contents: write
 env:
