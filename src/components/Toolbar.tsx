@@ -11,10 +11,12 @@ import SpareIcon from "./node-icons/SpareIcon.tsx"
 import FdepIcon from "./node-icons/FdepIcon.tsx"
 import AndSvg from "../img/and.svg"
 import {useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
+import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
 export default function Toolbar() {
     const {animationState, selectedToFailIds, setAnimationState, setSelectedToFailIds} = useDiagramAnimationStore()
+    const {getNodeById} = useDiagramStateStore()
 
     const [dragged, setDragged] = useState<number | null>(null)
     const [mouse, setMouse] = useState<[number, number]>([0, 0])
@@ -136,33 +138,38 @@ export default function Toolbar() {
                         ? <div>
                             {/* ----------FLOATING ITEM---------- */}
                             {dragged !== null && (
-                                <div className="floating list-item"
+                                <div className="floating w-40 bg-white text-bold flex gap-2 -mt-2 -ml-3"
                                      style={{
                                          left: `${mouse[0]}px`,
                                          top: `${mouse[1]}px`,
                                      }}
-                                >{selectedToFailIds[dragged]}</div>
+                                >
+                                    <div className="i-mdi-drag-horizontal font-bold text-2xl"/>
+                                    {getNodeById(selectedToFailIds[dragged])?.data.label}
+                                </div>
                             )}
 
                             {/* ----------MAIN LIST---------- */}
-                            <ol className="list">
-                                <div className={`list-item drop-zone ${
+                            <div className="list">
+                                <div className={`list-item w-full drop-zone ${
                                     dragged === null || dropZone !== 0 ? "special-hidden" : ""
                                 }`} /> {/* Drop zone before all items */}
                                 {selectedToFailIds.map((value, index) => (
                                     <>
                                         {dragged !== index && (
                                             <>
-                                                <li
-                                                    key={value}
-                                                    className="list-item in-list"
+                                                <div
+                                                    key={getNodeById(value)?.data.label || value}
+                                                    className="in-list flex gap-2"
                                                     onMouseDown={(e) => {
-                                                        e.preventDefault();
-                                                        setDragged(index);
+                                                        e.preventDefault()
+                                                        setDragged(index)
                                                     }}
                                                 >
-                                                    {value}
-                                                </li>
+                                                    <div className="i-mdi-drag-horizontal font-bold text-2xl"/>
+                                                    <div className="font-bold">{index + 1}.</div>
+                                                    {getNodeById(value)?.data.label || value}
+                                                </div>
                                                 <div
                                                     className={`list-item drop-zone ${dragged === null || dropZone !== index + 1 ? "special-hidden" : ""}`}
                                                 />{/* drop zone after every item */}
@@ -170,7 +177,7 @@ export default function Toolbar() {
                                         )}
                                     </>
                                 ))}
-                            </ol>
+                            </div>
                         </div>
                         : <p className="italic text-alt">
                             Hint: <br/>
