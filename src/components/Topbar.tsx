@@ -118,12 +118,14 @@ export default function Topbar({reactFlowInstance}: TopBarProps) {
                 </div>
             }
             <div className="flex h-full">
-                <TopbarButton
-                    className="border-l-2.5 border-r-none"
-                    onClick={() => organizeLayout("BT")}
-                >
-                    <div className="i-mdi-auto-fix text-main"/>
-                </TopbarButton>
+                {animationState === "stopped" && <>
+                    <TopbarButton
+                        className="border-l-2.5 border-r-none"
+                        onClick={() => organizeLayout("BT")}
+                    >
+                        <div className="i-mdi-auto-fix text-main"/>
+                    </TopbarButton>
+                </> }
                 <TopbarSpeedChanger/>
             </div>
         </div>
