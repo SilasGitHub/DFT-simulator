@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.64",
+    "@types/node": "^20.12.7",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@types/uuid": "^9.0.8",

@@ -11,10 +11,12 @@ import SpareIcon from "./node-icons/SpareIcon.tsx"
 import FdepIcon from "./node-icons/FdepIcon.tsx"
 import AndSvg from "../img/and.svg"
 import {useDiagramAnimationStore} from "../stores/useDiagramAnimationStore.ts"
+import {useDiagramStateStore} from "../stores/useDiagramStateStore.ts"
 
 // Reorderable ids list based on this tutorial: https://dev.to/h8moss/build-a-reorderable-list-in-react-29on
 export default function Toolbar() {
     const {animationState, selectedToFailIds, setAnimationState, setSelectedToFailIds} = useDiagramAnimationStore()
+    const {getNodeById} = useDiagramStateStore()
 
     const [dragged, setDragged] = useState<number | null>(null)
     const [mouse, setMouse] = useState<[number, number]>([0, 0])
@@ -123,144 +125,152 @@ export default function Toolbar() {
     }, [animationState])
 
     return (
-        <div id="toolbar" className="p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-full pointer-events-none">
-            <aside
-                className="w-65 h-auto bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
-            >
-                <h1 className="text-title border-b-2 border-node-border">
-                    Selected Events
-                </h1>
-                {selectedToFailIds.length > 0
-                    ? <div>
-                        {/* ----------FLOATING ITEM---------- */}
-                        {dragged !== null && (
-                            <div className="floating list-item"
-                                 style={{
-                                     left: `${mouse[0]}px`,
-                                     top: `${mouse[1]}px`,
-                                 }}
-                            >{selectedToFailIds[dragged]}</div>
-                        )}
+        <div className="fixed bottom-0 w-full m-0 z-10 !pointer-events-none">
+            {/*z-10 to stay above reactflow ad*/}
+            <div id="toolbar" className="p-[15px] lg:p-4 xl:p-6 2xl:p-8 flex flex-col gap-4 w-full pointer-events-none">
+                <aside
+                    className="w-65 h-auto bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border flex flex-col pointer-events-auto gap-2 p-3"
+                >
+                    <h1 className="text-title border-b-2 border-node-border">
+                        Selected Events
+                    </h1>
+                    {selectedToFailIds.length > 0
+                        ? <div>
+                            {/* ----------FLOATING ITEM---------- */}
+                            {dragged !== null && (
+                                <div className="floating w-40 bg-white text-bold flex gap-2 -mt-2 -ml-3"
+                                     style={{
+                                         left: `${mouse[0]}px`,
+                                         top: `${mouse[1]}px`,
+                                     }}
+                                >
+                                    <div className="i-mdi-drag-horizontal font-bold text-2xl"/>
+                                    {getNodeById(selectedToFailIds[dragged])?.data.label}
+                                </div>
+                            )}
 
-                        {/* ----------MAIN LIST---------- */}
-                        <ol className="list">
-                            <div className={`list-item drop-zone ${
-                                dragged === null || dropZone !== 0 ? "special-hidden" : ""
-                            }`} /> {/* Drop zone before all items */}
-                            {selectedToFailIds.map((value, index) => (
-                                <>
-                                    {dragged !== index && (
-                                        <>
-                                            <li
-                                                key={value}
-                                                className="list-item in-list"
-                                                onMouseDown={(e) => {
-                                                    e.preventDefault();
-                                                    setDragged(index);
-                                                }}
-                                            >
-                                                {value}
-                                            </li>
-                                            <div
-                                                className={`list-item drop-zone ${dragged === null || dropZone !== index + 1 ? "special-hidden" : ""}`}
-                                            />{/* drop zone after every item */}
-                                        </>
-                                    )}
-                                </>
-                            ))}
-                        </ol>
-                    </div>
-                    : <p className="italic text-alt">
-                        Hint: <br/>
-                        Click some events to include them in the simulation
-                    </p>
-                }
-            </aside>
-            <aside
-                className={classNames(
-                    'bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2 text-main',
-                    isCurrentlyAnimating ? 'w-65' : 'w-[100%]'
-                )}
-            >
-                <div className="flex w-59 justify-evenly">
-                    <ToolbarButton
-                        onClick={() => animationState === "playing" ? pauseAnimation() : startAnimation()}
-                        disabled={!isPlayable}
-                        label={animationState === "playing" ? "Pause" : "Play"}
-                    >
-                        <div
-                            className={animationState === "playing" ? "i-mdi-pause text-pause" : "i-mdi-play text-play"}
-                        />
-                    </ToolbarButton>
-                    <ToolbarButton
-                        onClick={() => stopAnimation()} disabled={!isCurrentlyAnimating}
-                        label="Stop"
-                    >
-                        <div className="i-mdi-stop text-stop"/>
-                    </ToolbarButton>
-                </div>
-                {!isCurrentlyAnimating &&
-                    <>
-                        <div className="flex flex-wrap gap-2 justify-evenly">
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)}
-                                draggable
-                                label="Event"
-                            >
-                                <img className="entity" src={EventSvg}/>
-                            </ToolbarButton>
-
-                            <Divider orientation="vertical"/>
-
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)}
-                                draggable
-                                label="AND"
-                            >
-                                <img className="entity gate-img" src={AndSvg}/>
-                            </ToolbarButton>
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)}
-                                draggable
-                                label="OR"
-                            >
-                                <OrIcon/>
-                            </ToolbarButton>
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.XOR_NODE)}
-                                draggable
-                                label="XOR"
-                            >
-                                <XorIcon/>
-                            </ToolbarButton>
-
-                            <Divider orientation="vertical"/>
-
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.PAND_NODE)}
-                                draggable
-                                label="PAND"
-                            >
-                                <PAndIcon/>
-                            </ToolbarButton>
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.FDEP_NODE)}
-                                draggable
-                                label="FDEP"
-                            >
-                                <FdepIcon className="transform scale-40 min-w-28 border-4"/>
-                            </ToolbarButton>
-                            <ToolbarButton
-                                onDragStart={(event) => onDragStart(event, NodeType.SPARE_NODE)}
-                                draggable
-                                label="SPARE"
-                            >
-                                <SpareIcon className="transform scale-40 min-w-28 border-4"/>
-                            </ToolbarButton>
+                            {/* ----------MAIN LIST---------- */}
+                            <div className="list">
+                                <div className={`list-item w-full drop-zone ${
+                                    dragged === null || dropZone !== 0 ? "special-hidden" : ""
+                                }`} /> {/* Drop zone before all items */}
+                                {selectedToFailIds.map((value, index) => (
+                                    <>
+                                        {dragged !== index && (
+                                            <>
+                                                <div
+                                                    key={getNodeById(value)?.data.label || value}
+                                                    className="in-list flex gap-2"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault()
+                                                        setDragged(index)
+                                                    }}
+                                                >
+                                                    <div className="i-mdi-drag-horizontal font-bold text-2xl"/>
+                                                    <div className="font-bold">{index + 1}.</div>
+                                                    {getNodeById(value)?.data.label || value}
+                                                </div>
+                                                <div
+                                                    className={`list-item drop-zone ${dragged === null || dropZone !== index + 1 ? "special-hidden" : ""}`}
+                                                />{/* drop zone after every item */}
+                                            </>
+                                        )}
+                                    </>
+                                ))}
+                            </div>
                         </div>
-                    </>
-                }
-            </aside>
+                        : <p className="italic text-alt">
+                            Hint: <br/>
+                            Click some events to include them in the simulation
+                        </p>
+                    }
+                </aside>
+                <aside
+                    className={classNames(
+                        'bg-background-floating rounded-2xl shadow-lg shadow-gray-500 border-4 border-theme-border h-full relative flex justify-between flex-wrap-reverse pointer-events-auto gap-x-8 gap-y-2 p-2 text-main',
+                        isCurrentlyAnimating ? 'w-65' : 'w-[100%]'
+                    )}
+                >
+                    <div className="flex w-59 justify-evenly">
+                        <ToolbarButton
+                            onClick={() => animationState === "playing" ? pauseAnimation() : startAnimation()}
+                            disabled={!isPlayable}
+                            label={animationState === "playing" ? "Pause" : "Play"}
+                        >
+                            <div
+                                className={animationState === "playing" ? "i-mdi-pause text-pause" : "i-mdi-play text-play"}
+                            />
+                        </ToolbarButton>
+                        <ToolbarButton
+                            onClick={() => stopAnimation()} disabled={!isCurrentlyAnimating}
+                            label="Stop"
+                        >
+                            <div className="i-mdi-stop text-stop"/>
+                        </ToolbarButton>
+                    </div>
+                    {!isCurrentlyAnimating &&
+                        <>
+                            <div className="flex flex-wrap gap-2 justify-evenly">
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.EVENT_NODE)}
+                                    draggable
+                                    label="Event"
+                                >
+                                    <img className="entity" src={EventSvg}/>
+                                </ToolbarButton>
+
+                                <Divider orientation="vertical"/>
+
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.AND_NODE)}
+                                    draggable
+                                    label="AND"
+                                >
+                                    <img className="entity gate-img" src={AndSvg}/>
+                                </ToolbarButton>
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.OR_NODE)}
+                                    draggable
+                                    label="OR"
+                                >
+                                    <OrIcon/>
+                                </ToolbarButton>
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.XOR_NODE)}
+                                    draggable
+                                    label="XOR"
+                                >
+                                    <XorIcon/>
+                                </ToolbarButton>
+
+                                <Divider orientation="vertical"/>
+
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.PAND_NODE)}
+                                    draggable
+                                    label="PAND"
+                                >
+                                    <PAndIcon/>
+                                </ToolbarButton>
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.FDEP_NODE)}
+                                    draggable
+                                    label="FDEP"
+                                >
+                                    <FdepIcon className="transform scale-40 min-w-28 border-4"/>
+                                </ToolbarButton>
+                                <ToolbarButton
+                                    onDragStart={(event) => onDragStart(event, NodeType.SPARE_NODE)}
+                                    draggable
+                                    label="SPARE"
+                                >
+                                    <SpareIcon className="transform scale-40 min-w-28 border-4"/>
+                                </ToolbarButton>
+                            </div>
+                        </>
+                    }
+                </aside>
+            </div>
         </div>
     )
 }

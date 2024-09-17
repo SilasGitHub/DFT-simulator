@@ -1,6 +1,12 @@
 name: Deploy Docs
-on: [push, pull_request]
-
+on:
+    push:
+        branches:
+        - main
+permissions:
+  contents: write
+env:
+  BASE_URL: /DFT-simulator/
 jobs:
   build_and_docs:
     runs-on: ubuntu-latest
